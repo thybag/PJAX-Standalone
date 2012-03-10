@@ -60,11 +60,12 @@
 		if(typeof content_node == 'string') content_node = document.getElementById(content_node);
 
 		//Attach event.
-		this.addEvent(link_node, 'click', function(e){
+		this.addEvent(link_node, 'click', function(event){
+
 			//Allow middle click
 			if ( event.which > 1 || event.metaKey ) return;
 			//Dont fire normal event
-			if(e.preventDefault){e.preventDefault();}else{e.returnValue = false;}
+			if(event.preventDefault){event.preventDefault();}else{event.returnValue = false;}
 			//Take no action if we are already on said page?
 			if(document.location.href == link_node.href) return;
 			//handle the load.
