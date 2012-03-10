@@ -36,12 +36,12 @@ Then specify what container they should use to place loaded content in.
 Setup all links with a specific class to use a particular container to place there content.
 
 	<a href='page2.php' class='pjaxer'>Page 2</a>
-	
+
 	pjax.connect('content', 'pjaxer');
 	
 ### Server side.
 
-	Update your code to return only the main content area when the X-PJAX header is set, while retruning the full website layout when it is not.
+Update your code to return only the main content area when the X-PJAX header is set, while retruning the full website layout when it is not.
 	
 	<?php
 	$headers = getallheaders();
