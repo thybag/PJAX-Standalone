@@ -4,7 +4,7 @@
  * A standalone implementation of Pushstate AJAX, for non-jquery webpages.
  * JQuery users should use the original implimention at: https://github.com/defunkt/jquery-pjax
  * 
- * @version 0.1
+ * @version 0.3
  * @author Carl
  */
 (function(){
@@ -345,17 +345,19 @@
 	 * @scope public
 	 * @param options  
 	 */
-	this.invoke = function(options){
+	this.invoke = function(/* options */){
 		//url, container
 		if(arguments.length == 2){
+			options = {};
 			options.url = arguments[0];
 			options.container = arguments[1];
+		}else{
+			options = arguments[0];
 		}
 		//Proccess options
 		options = internal.parseOptions(options);
 		//If everything went ok, activate pjax.
 		if(options !== false) internal.handle(options);
-		
 	}
 
 	//Make object accessable
