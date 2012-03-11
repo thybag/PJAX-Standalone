@@ -36,37 +36,58 @@
 		}
 	}
 
-	//Util method, recreate options as new object so each link can have differnt settings.
+	/**
+	 * Clone
+	 * Util method to create copys of the options object (so they do not share references)
+	 * This allows custom settings on differnt links.
+	 *
+	 * @scope private
+	 * @param obj
+	 * @return obj
+	 */
 	internal.clone = function(obj){
 		object = {};
+		//For every option in object, create it in the duplicate.
 		for (var i in obj) {
 			object[i] = obj[i];
 		}
 		return object;
 	}
 
-
+	/**
+	 * triggerEvent
+	 * Fire an event on a given object (used for callbacks)
+	 *
+	 * @scope private
+	 * @param node. Objects to fire event on
+	 * @return event_name. type of event
+	 */
 	internal.triggerEvent = function(node, event_name){
 		if (document.createEvent) {
+			//Good browsers
 			event = document.createEvent("HTMLEvents");
     		event.initEvent(event_name, true, true);
     		node.dispatchEvent(event);
 		}else{
+			//old IE versions
 			event = document.createEventObject();
     		event.eventType = 'on'+ event_name;
     		node.fireEvent(event.eventType, event);
 		}
 	}
-
-
-	//Listen for pop state event
+	/**
+	 * popstate listener
+	 * Listens for back/forward button events and updates page accordinly.
+	 */
 	internal.addEvent(window, 'popstate', function(st){
 		if(st.state != null){
+			//Convert state data to pjax options
 			var options = internal.parseOptions({	
 				'url': st.state.url, 
 				'container': st.state.container, 
 				'history': false
 			});
+			//If somthing went wrong, return.
 			if(options == false) return;
 			//If there is a state object, handle it as a page load.
 			internal.handle(options);
@@ -90,17 +111,17 @@
 			 node.host !== document.location.host ){
 			return;
 		}
-
+		//Add link href to object
 		options.url = node.href;
-
+		//If pjax data is specified, use as container
 		if(node.getAttribute('data-pjax')){
 			options.container = node.getAttribute('data-pjax');
 		}
-
+		//If data-title is specified, use as title.
 		if(node.getAttribute('data-title')){
 			options.title = node.getAttribute('data-title');
 		}
-
+		//Check options are valid.
 		options = internal.parseOptions(options);
 		if(options == false) return;
 
@@ -112,10 +133,8 @@
 			if(event.preventDefault){event.preventDefault();}else{event.returnValue = false;}
 			//Take no action if we are already on said page?
 			if(document.location.href == options.url) return false;
-
 			//handle the load.
 			internal.handle(options);
-			
 		});
 	}
 
@@ -129,6 +148,7 @@
 	 */
 	internal.handle = function(options){
 		
+		//Fire beforeSend Event.
 		internal.triggerEvent(options.container, 'beforeSend');
 
 		//Do the request
@@ -136,17 +156,17 @@
 
 			//Fire Events
 			internal.triggerEvent(options.container,'complete');
-			if(html == false){
+			if(html == false){//Somthing went wrong
 				internal.triggerEvent(options.container,'error');
 				return;
-			}else{
+			}else{//got what we expected.
 				internal.triggerEvent(options.container,'success');
 			}
 
 			//Update the dom with the new content
 			options.container.innerHTML = html;
 
-			//Get the title if there is one.
+			//Get the title if there is one. (overrides provided titles)
 			if(options.container.getElementsByTagName('title').length != 0){
 				options.title = options.container.getElementsByTagName('title')[0].innerHTML;
 			}
@@ -171,6 +191,7 @@
 	/**
 	 * request
 	 * Performs ajax request to page and returns the result..
+	 *
 	 * @scope private
 	 * @param location. Page to request.
 	 * @param callback. Method to call when page is loaded.
@@ -181,9 +202,10 @@
 			//Add state listener.
 			xmlhttp.onreadystatechange = function(){
 				if ((xmlhttp.readyState == 4) && (xmlhttp.status == 200)) {
+					//Success, Return html
 					callback(xmlhttp.responseText);
 				}else if((xmlhttp.readyState == 4) && (xmlhttp.status == 404 || xmlhttp.status == 500)){
-					//error
+					//error (return false)
 					callback(false);
 				}
 			}
@@ -196,31 +218,40 @@
 			xmlhttp.send(null);
 	}
 
-
+	/**
+	 * parseOptions
+	 * Validate and correct options object while connecting up any listeners.
+	 *
+	 * @scope private
+	 * @param options
+	 * @return false | valid options
+	 */
 	internal.parseOptions = function(options){
-		//Defaults.
+		//Defaults. (if somthing isn't provided)
 		opt = {};
 		opt.history = true;
 		opt.title = document.title;
+
 		//Ensure a url and container have been provided.
 		if(typeof options.url == 'undefined' || typeof options.container == 'undefined'){
 			console.log("URL and Container must be provided.");
 			return false;
 		}
 
-		//Get history?
+		//Find out if history has been provided
 		if(typeof options.history == 'undefined'){
+			//use default
 			options.history = opt.history;
 		}else{
 			//Ensure its bool.
 			options.history = (!(options.history == false));
 		}
-
+		//Find out if title has been provided, if not, use default
 		if(typeof options.title == 'undefined'){
 			options.title = opt.title;
 		}
 
-		//Get Container
+		//Get container (if its an id, convert to dom node.)
 		if(typeof options.container == 'string' ) {
 			container = document.getElementById(options.container);
 			if(container == null){
@@ -243,7 +274,7 @@
 		if(typeof options.success == 'function'){
 			internal.addEvent(options.container, 'success', options.success);
 		}
-
+		//Return options
 		return options;
 	}
 
@@ -262,6 +293,12 @@
 	 * Calling as connect(container_id, class_name)
 	 * 		Will try to attach any links with the given classname, using container_id as the target.
 	 *
+	 * Calling as connect({	
+	 *						'url':'somepage.php',
+	 *						'container':'somecontainer',
+	 * 						'beforeSend': function(){console.log("sending");}
+	 *					})
+	 * Provide specific setup options (and callbacks) as json.
 	 */
 	this.connect = function(/* options */){
 		//connect();
@@ -271,7 +308,7 @@
 			options.container = arguments[0];
 			options.class = arguments[1];
 		}
-		
+		//Either json or container id
 		if(arguments.length == 1){
 			if(typeof arguments[0] == 'string' ) {
 				//connect(container_id)
@@ -282,7 +319,7 @@
 			}
 		}
 
-		//Dont run to the window is ready.
+		//Dont run until the window is ready.
 		internal.addEvent(window, 'load', function(){	
 
 			if(typeof options.class != 'undefined'){
@@ -300,18 +337,13 @@
 		});
 	}
 	
-
-
-
 	/**
 	 * invoke
 	 * Directly invoke a pjax load.
+	 * invoke({url: 'file.php', 'container':'content'});
 	 *
 	 * @scope public
-	 *
-	 * @param options.url
-	 * @param options.container
-	 * @param options.title
+	 * @param options  
 	 */
 	this.invoke = function(options){
 		//url, container
@@ -325,7 +357,6 @@
 		if(options !== false) internal.handle(options);
 		
 	}
-
 
 	//Make object accessable
 	window.pjax = this;
