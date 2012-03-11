@@ -7,8 +7,16 @@
 	<script type="text/javascript" src='../pjax-standalone.js'></script> 
 	<script type='text/javascript'>
 		//PJAX links!
-		pjax.connect('content', 'pjaxer');
-		pjax.connect();
+		//pjax.connect('content', 'pjaxer');
+		//pjax.connect('content');
+		//pjax.connect();
+		
+		pjax.connect({
+			'container': 'content',
+			'beforeSend': function(){console.log("before send");},
+			'complete': function(){console.log("done!");},
+		});
+		
 	</script>
 
 	<!-- Local styles for Demo -->

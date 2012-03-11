@@ -10,6 +10,8 @@
 (function(){
 	//Make a reference to this, so we can ensure its always accessable.
 	var _this = this, firstrun = true;
+	//Private methods.
+	var internal = {};
 
 	//Borrowed wholesale from https://github.com/defunkt/jquery-pjax
 	//Attempt to check that a device supports pushstate before attempting to use it.
@@ -18,11 +20,13 @@
 	/**
 	 * AddEvent
 	 * Cross browser compatable method to add event listeners
+	 *
+	 * @scope private
 	 * @param obj Object to listen on
 	 * @param event Event to listen for.
 	 * @param callback Method to run when event is detected.
 	 */
-	this.addEvent = function(obj, event, callback){
+	internal.addEvent = function(obj, event, callback){
 		if(window.addEventListener){
 				//Browsers that don't suck
 				obj.addEventListener(event, callback, false);
@@ -32,84 +36,134 @@
 		}
 	}
 
+	//Util method, recreate options as new object so each link can have differnt settings.
+	internal.clone = function(obj){
+		object = {};
+		for (var i in obj) {
+			object[i] = obj[i];
+		}
+		return object;
+	}
+
+
+	internal.triggerEvent = function(node, event_name){
+		if (document.createEvent) {
+			event = document.createEvent("HTMLEvents");
+    		event.initEvent(event_name, true, true);
+    		node.dispatchEvent(event);
+		}else{
+			event = document.createEventObject();
+    		event.eventType = 'on'+ event_name;
+    		node.fireEvent(event.eventType, event);
+		}
+	}
+
+
 	//Listen for pop state event
-	this.addEvent(window,'popstate', function(st){
+	internal.addEvent(window, 'popstate', function(st){
 		if(st.state != null){
+			var options = internal.parseOptions({	
+				'url': st.state.url, 
+				'container': st.state.container, 
+				'history': false
+			});
+			if(options == false) return;
 			//If there is a state object, handle it as a page load.
-			_this.handle(st.state.url, document.getElementById(st.state.node_id), false);
+			internal.handle(options);
 		}
 	});
 
 	/**
 	 * attach
 	 * Attach pjax listeners to a link.
+	 * @scope private
 	 * @param link_node. link that will be clicked.
 	 * @param content_node. 
 	 */
-	this.attach = function(link_node, content_node){
+	internal.attach = function(node, options){
 
 		//if no pushstate support, dont attach and let stuff work as normal.
 		if(!pushstate_supported) return;
 
 		//Ignore external links.
-		if ( link_node.protocol !== document.location.protocol ||
-			 link_node.host !== document.location.host ){
+		if ( node.protocol !== document.location.protocol ||
+			 node.host !== document.location.host ){
 			return;
 		}
-		//If content_node is string, assum its an id.
-		if(typeof content_node == 'string') content_node = document.getElementById(content_node);
+
+		options.url = node.href;
+
+		if(node.getAttribute('data-pjax')){
+			options.container = node.getAttribute('data-pjax');
+		}
+
+		if(node.getAttribute('data-title')){
+			options.title = node.getAttribute('data-title');
+		}
+
+		options = internal.parseOptions(options);
+		if(options == false) return;
 
 		//Attach event.
-		this.addEvent(link_node, 'click', function(event){
-
-			//Allow middle click
+		internal.addEvent(node, 'click', function(event){
+			//Allow middle click (pages in new windows)
 			if ( event.which > 1 || event.metaKey ) return;
 			//Dont fire normal event
 			if(event.preventDefault){event.preventDefault();}else{event.returnValue = false;}
 			//Take no action if we are already on said page?
-			if(document.location.href == link_node.href) return;
+			if(document.location.href == options.url) return false;
+
 			//handle the load.
-			_this.handle(link_node.href, content_node, true);
-		})
+			internal.handle(options);
+			
+		});
 	}
 
 	/**
 	 * handle
 	 * Handle requests to load content via pjax.
+	 * @scope private
 	 * @param url. Page to load.
 	 * @param node. Dom node to add returned content in to.
 	 * @param addtohistory. Does this load require a history event.
 	 */
-	this.handle = function(url, node, addtohistory){
+	internal.handle = function(options){
 		
-		//If not provided, assume it should be tracked.
-		if(typeof addtohistory == 'undefined') addtohistory = true;
+		internal.triggerEvent(options.container, 'beforeSend');
 
 		//Do the request
-		this.request(url, function(html){
-			
+		internal.request(options.url, function(html){
+
+			//Fire Events
+			internal.triggerEvent(options.container,'complete');
+			if(html == false){
+				internal.triggerEvent(options.container,'error');
+				return;
+			}else{
+				internal.triggerEvent(options.container,'success');
+			}
+
 			//Update the dom with the new content
-			node.innerHTML = html;
+			options.container.innerHTML = html;
 
 			//Get the title if there is one.
-			title = document.title;
-			if(node.getElementsByTagName('title').length != 0){
-				title = node.getElementsByTagName('title')[0].innerHTML;
+			if(options.container.getElementsByTagName('title').length != 0){
+				options.title = options.container.getElementsByTagName('title')[0].innerHTML;
 			}
-			//Set the title
-			document.title = title ;
-
+			
 			//Do we need to add this to the history?
-			if(addtohistory){
+			if(options.history){
 				//If this is the first time pjax has run, create a state object for the current page.
 				if(firstrun){
-					window.history.replaceState({'url': document.location.href, 'node_id':  node.id}, document.title);
+					window.history.replaceState({'url': document.location.href, 'container':  options.container.id}, document.title);
 					firstrun = false;
 				}
 				//Update browser history
-				window.history.pushState({'url': url, 'node_id': node.id }, title , url);
+				window.history.pushState({'url': options.url, 'container': options.container.id }, options.title , options.url);
 			}
-			
+
+			//Set new title
+			document.title = options.title;
 		})
 		
 	}
@@ -117,16 +171,20 @@
 	/**
 	 * request
 	 * Performs ajax request to page and returns the result..
+	 * @scope private
 	 * @param location. Page to request.
 	 * @param callback. Method to call when page is loaded.
 	 */
-	this.request = function(location, callback){
+	internal.request = function(location, callback){
 		//Create xmlHttpRequest object.
 		try {xmlhttp = window.XMLHttpRequest?new XMLHttpRequest(): new ActiveXObject("Microsoft.XMLHTTP");}  catch (e) { }
 			//Add state listener.
 			xmlhttp.onreadystatechange = function(){
 				if ((xmlhttp.readyState == 4) && (xmlhttp.status == 200)) {
 					callback(xmlhttp.responseText);
+				}else if((xmlhttp.readyState == 4) && (xmlhttp.status == 404 || xmlhttp.status == 500)){
+					//error
+					callback(false);
 				}
 			}
 			//Secret pjax ?get param so browser doesnt return pjax content from cache when we dont want it
@@ -138,9 +196,61 @@
 			xmlhttp.send(null);
 	}
 
+
+	internal.parseOptions = function(options){
+		//Defaults.
+		opt = {};
+		opt.history = true;
+		opt.title = document.title;
+		//Ensure a url and container have been provided.
+		if(typeof options.url == 'undefined' || typeof options.container == 'undefined'){
+			console.log("URL and Container must be provided.");
+			return false;
+		}
+
+		//Get history?
+		if(typeof options.history == 'undefined'){
+			options.history = opt.history;
+		}else{
+			//Ensure its bool.
+			options.history = (!(options.history == false));
+		}
+
+		if(typeof options.title == 'undefined'){
+			options.title = opt.title;
+		}
+
+		//Get Container
+		if(typeof options.container == 'string' ) {
+			container = document.getElementById(options.container);
+			if(container == null){
+				console.log("Could not find container with id:"+options.container);
+				return false;
+			}
+			options.container = container;
+		}
+
+		//If everything went ok thus far, connect up listeners
+		if(typeof options.beforeSend == 'function'){
+			internal.addEvent(options.container, 'beforeSend', options.beforeSend);
+		}
+		if(typeof options.complete == 'function'){
+			internal.addEvent(options.container, 'complete', options.complete);
+		}
+		if(typeof options.error == 'function'){
+			internal.addEvent(options.container, 'error', options.error);
+		}
+		if(typeof options.success == 'function'){
+			internal.addEvent(options.container, 'success', options.success);
+		}
+
+		return options;
+	}
+
 	/**
 	 * connect
 	 * Attach links to pjax handlers.
+	 * @scope public
 	 *
 	 * Can be called in 3 ways.
 	 * Calling as connect(); 
@@ -153,88 +263,67 @@
 	 * 		Will try to attach any links with the given classname, using container_id as the target.
 	 *
 	 */
-	this.connect = function(container_id, class_name){
-		//Dont run to the window is ready.
-		this.addEvent(window,'load', function(){
-			
-			if(typeof class_name != 'undefined'){
-				//Get all nodes with the provided classname.
-				nodes = document.getElementsByClassName(class_name);
+	this.connect = function(/* options */){
+		//connect();
+		var options = {};
+		//connect(container, class_to_apply_to)
+		if(arguments.length == 2){
+			options.container = arguments[0];
+			options.class = arguments[1];
+		}
+		
+		if(arguments.length == 1){
+			if(typeof arguments[0] == 'string' ) {
+				//connect(container_id)
+				options.container = arguments[0];
 			}else{
-				//If no class was provided, just get all the links and filter
-				//based on who has a data-pjax attribute
+				//Else connect({url:'', container: ''});
+				options = arguments[0];
+			}
+		}
+
+		//Dont run to the window is ready.
+		internal.addEvent(window, 'load', function(){	
+
+			if(typeof options.class != 'undefined'){
+				//Get all nodes with the provided classname.
+				nodes = document.getElementsByClassName(options.class);
+			}else{
+				//If no class was provided, just get all the links
 				nodes = document.getElementsByTagName('a');
 			}
 			//For all returned nodes
-			for(i=0;i<nodes.length;i++){
+			for(var i=0; i<nodes.length; i++){
 				node = nodes[i];
-				//If it has a data-pjax, use that as the target.
-				if(target = node.getAttribute('data-pjax')){
-					_this.attach(node, target);
-				}else{
-					//Else attempt to use target_id if it was provided.
-					if(typeof container_id != 'undefined'){
-						_this.attach(node, container_id);
-					}
-				}
+				internal.attach(node, internal.clone(options));
 			}
 		});
 	}
 	
-	/*
-	this.opt = new function(){
-		this.url = function(url){
-			//Ensure its defined
-			if(typeof url != 'undefined') return null;
-			//Ensure we are not already on said page.
-			if(document.location.href == url) return null;
 
-			return url;
-		}
-		this.container = function(container){
-			//Ensure value was provided.
-			if(typeof container != 'undefined') return null;
-			//If id was provided, get dom node.
-			if(typeof options.container == 'string' ) {
-				container = document.getElementById(container);
-			}
-			//Return node | null
-			return container;
-		}
-	}
-	*/
+
 
 	/**
 	 * invoke
 	 * Directly invoke a pjax load.
+	 *
+	 * @scope public
 	 *
 	 * @param options.url
 	 * @param options.container
 	 * @param options.title
 	 */
 	this.invoke = function(options){
-
-		//options.history
-		//options.title
-
-		//Required options
-		if(typeof options.url != 'undefined' && typeof options.container != 'undefined'){
-			//Check we can find the container node.
-			if(typeof options.container == 'string' ) {
-				container = document.getElementById(options.container);
-				if(container == null) console.log("Unable to locate element with id:"+options.container);
-			}else{
-				container = options.container;
-			}
-			//Check if history is defined
-			if(typeof options.history == 'undefined'){
-				options.history = true;
-			}else{
-				options.history = (options.history==true);
-			}
-				
-			this.handle(options.url, container, options.history);
+		//url, container
+		if(arguments.length == 2){
+			options.url = arguments[0];
+			options.container = arguments[1];
 		}
+		//Proccess options
+		options = internal.parseOptions(options);
+		//If everything went ok, activate pjax.
+		if(options !== false) internal.handle(options);
+		
 	}
 
 
