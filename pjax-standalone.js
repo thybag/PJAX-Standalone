@@ -82,6 +82,9 @@
 	 */
 	this.handle = function(url, node, addtohistory){
 		
+		//If not provided, assume it should be tracked.
+		if(typeof addtohistory == 'undefined') addtohistory = true;
+
 		//Do the request
 		this.request(url, function(html){
 			
@@ -150,7 +153,7 @@
 	 * 		Will try to attach any links with the given classname, using container_id as the target.
 	 *
 	 */
-	this.connect = function(target_id, class_name){
+	this.connect = function(container_id, class_name){
 		//Dont run to the window is ready.
 		this.addEvent(window,'load', function(){
 			
@@ -170,15 +173,71 @@
 					_this.attach(node, target);
 				}else{
 					//Else attempt to use target_id if it was provided.
-					if(typeof target_id != 'undefined'){
-						_this.attach(node, target_id);
+					if(typeof container_id != 'undefined'){
+						_this.attach(node, container_id);
 					}
 				}
 			}
 		});
-		
 	}
 	
+	/*
+	this.opt = new function(){
+		this.url = function(url){
+			//Ensure its defined
+			if(typeof url != 'undefined') return null;
+			//Ensure we are not already on said page.
+			if(document.location.href == url) return null;
+
+			return url;
+		}
+		this.container = function(container){
+			//Ensure value was provided.
+			if(typeof container != 'undefined') return null;
+			//If id was provided, get dom node.
+			if(typeof options.container == 'string' ) {
+				container = document.getElementById(container);
+			}
+			//Return node | null
+			return container;
+		}
+	}
+	*/
+
+	/**
+	 * invoke
+	 * Directly invoke a pjax load.
+	 *
+	 * @param options.url
+	 * @param options.container
+	 * @param options.title
+	 */
+	this.invoke = function(options){
+
+		//options.history
+		//options.title
+
+		//Required options
+		if(typeof options.url != 'undefined' && typeof options.container != 'undefined'){
+			//Check we can find the container node.
+			if(typeof options.container == 'string' ) {
+				container = document.getElementById(options.container);
+				if(container == null) console.log("Unable to locate element with id:"+options.container);
+			}else{
+				container = options.container;
+			}
+			//Check if history is defined
+			if(typeof options.history == 'undefined'){
+				options.history = true;
+			}else{
+				options.history = (options.history==true);
+			}
+				
+			this.handle(options.url, container, options.history);
+		}
+	}
+
+
 	//Make object accessable
 	window.pjax = this;
 }).call({});
