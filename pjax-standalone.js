@@ -6,6 +6,8 @@
  * 
  * @version 0.3
  * @author Carl
+ * @source https://github.com/thybag/PJAX-Standalone
+ * @license MIT
  */
 (function(){
 	//Make a reference to this, so we can ensure its always accessable.
@@ -298,7 +300,7 @@
 	 *						'container':'somecontainer',
 	 * 						'beforeSend': function(){console.log("sending");}
 	 *					})
-	 * Provide specific setup options (and callbacks) as json.
+	 * 		Will use the provided json to configure the script in full (including callbacks)
 	 */
 	this.connect = function(/* options */){
 		//connect();
