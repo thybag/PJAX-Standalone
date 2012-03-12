@@ -67,14 +67,14 @@
 	internal.triggerEvent = function(node, event_name){
 		if (document.createEvent) {
 			//Good browsers
-			event = document.createEvent("HTMLEvents");
-    		event.initEvent(event_name, true, true);
-    		node.dispatchEvent(event);
+			evt = document.createEvent("HTMLEvents");
+    		evt.initEvent(event_name, true, true);
+    		node.dispatchEvent(evt);
 		}else{
 			//old IE versions
-			event = document.createEventObject();
-    		event.eventType = 'on'+ event_name;
-    		node.fireEvent(event.eventType, event);
+			evt = document.createEventObject();
+    		evt.eventType = 'on'+ event_name;
+    		node.fireEvent(evt.eventType, evt);
 		}
 	}
 	/**
