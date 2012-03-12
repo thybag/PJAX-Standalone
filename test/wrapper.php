@@ -14,7 +14,7 @@
 		pjax.connect({
 			'container': 'content',
 			'beforeSend': function(){console.log("before send");},
-			'complete': function(){console.log("done!");},
+			'complete': function(){console.log("done!");}
 		});
 		
 	</script>
@@ -95,7 +95,7 @@
 					<a href='.' data-pjax='content'>Home</a>
 					<a href='page1.php' data-pjax='content'>Page 1</a>
 					<a href='page2.php' data-pjax='content'>Page 2</a>
-					<a href='.' class='pjaxer'>Home again (attached via css)</a>
+					<a href='page3.php' data-title='Page 3!'>Page 3</a>
 				</div>
 			</div>
 			<div id='content'>
