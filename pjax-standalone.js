@@ -17,7 +17,7 @@
 
 	//Borrowed wholesale from https://github.com/defunkt/jquery-pjax
 	//Attempt to check that a device supports pushstate before attempting to use it.
-	var pushstate_supported = window.history && window.history.pushState && window.history.replaceState && !navigator.userAgent.match(/((iPod|iPhone|iPad).+\bOS\s+[1-4]|WebApps\/.+CFNetwork)/);
+	internal.is_supported = window.history && window.history.pushState && window.history.replaceState && !navigator.userAgent.match(/((iPod|iPhone|iPad).+\bOS\s+[1-4]|WebApps\/.+CFNetwork)/);
 	
 	/**
 	 * AddEvent
@@ -106,7 +106,7 @@
 	internal.attach = function(node, options){
 
 		//if no pushstate support, dont attach and let stuff work as normal.
-		if(!pushstate_supported) return;
+		if(!internal.is_supported) return;
 
 		//Ignore external links.
 		if ( node.protocol !== document.location.protocol ||
@@ -308,7 +308,7 @@
 		//connect(container, class_to_apply_to)
 		if(arguments.length == 2){
 			options.container = arguments[0];
-			options.class = arguments[1];
+			options._class = arguments[1];
 		}
 		//Either json or container id
 		if(arguments.length == 1){
@@ -324,9 +324,9 @@
 		//Dont run until the window is ready.
 		internal.addEvent(window, 'load', function(){	
 
-			if(typeof options.class != 'undefined'){
+			if(typeof options._class != 'undefined'){
 				//Get all nodes with the provided classname.
-				nodes = document.getElementsByClassName(options.class);
+				nodes = document.getElementsByClassName(options._class);
 			}else{
 				//If no class was provided, just get all the links
 				nodes = document.getElementsByTagName('a');
@@ -356,6 +356,11 @@
 		}else{
 			options = arguments[0];
 		}
+		//If Pjax isn't supported by the current browser, push user to specified page.
+		if(!internal.is_supported){
+			document.location = options.url;
+			return;	
+		} 
 		//Proccess options
 		options = internal.parseOptions(options);
 		//If everything went ok, activate pjax.
