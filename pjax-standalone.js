@@ -1,7 +1,7 @@
 /**
  * PJAX- Standalone
  *
- * A standalone implementation of Pushstate AJAX, for non-jquery webpages.
+ * A standalone implementation of Pushstate AJAX, for non-JQuery webpages.
  * JQuery users should use the original implimention at: https://github.com/defunkt/jquery-pjax
  * 
  * @version 0.3
@@ -10,14 +10,15 @@
  * @license MIT
  */
 (function(){
-	//Make a reference to this, so we can ensure its always accessable.
-	var _this = this, firstrun = true;
-	//Private methods.
-	var internal = {};
 
-	//Borrowed wholesale from https://github.com/defunkt/jquery-pjax
-	//Attempt to check that a device supports pushstate before attempting to use it.
-	internal.is_supported = window.history && window.history.pushState && window.history.replaceState && !navigator.userAgent.match(/((iPod|iPhone|iPad).+\bOS\s+[1-4]|WebApps\/.+CFNetwork)/);
+	//Object to store private values/methods.
+	var internal = {
+		//Is this the first usage of pjax? (Ensure history entery has required values if so.)
+		"firstrun": true,
+		//Borrowed wholesale from https://github.com/defunkt/jquery-pjax
+		//Attempt to check that a device supports pushstate before attempting to use it.
+		"is_supported": window.history && window.history.pushState && window.history.replaceState && !navigator.userAgent.match(/((iPod|iPhone|iPad).+\bOS\s+[1-4]|WebApps\/.+CFNetwork)/)
+	};
 	
 	/**
 	 * AddEvent
@@ -79,7 +80,7 @@
 	}
 	/**
 	 * popstate listener
-	 * Listens for back/forward button events and updates page accordinly.
+	 * Listens for back/forward button events and updates page accordingly.
 	 */
 	internal.addEvent(window, 'popstate', function(st){
 		if(st.state != null){
@@ -176,9 +177,9 @@
 			//Do we need to add this to the history?
 			if(options.history){
 				//If this is the first time pjax has run, create a state object for the current page.
-				if(firstrun){
+				if(internal.firstrun){
 					window.history.replaceState({'url': document.location.href, 'container':  options.container.id}, document.title);
-					firstrun = false;
+					internal.firstrun = false;
 				}
 				//Update browser history
 				window.history.pushState({'url': options.url, 'container': options.container.id }, options.title , options.url);
@@ -186,17 +187,17 @@
 
 			//Set new title
 			document.title = options.title;
-		})
+		});
 		
 	}
 
 	/**
-	 * request
-	 * Performs ajax request to page and returns the result..
+	 * Request
+	 * Performs AJAX request to page and returns the result..
 	 *
 	 * @scope private
 	 * @param location. Page to request.
-	 * @param callback. Method to call when page is loaded.
+	 * @param callback. Method to call when a page is loaded.
 	 */
 	internal.request = function(location, callback){
 		//Create xmlHttpRequest object.
@@ -213,9 +214,9 @@
 			}
 			//Secret pjax ?get param so browser doesnt return pjax content from cache when we dont want it
 			xmlhttp.open("GET", location + '?_pjax', true);
-			//Add headers so things can tell the request is ajax.
-			xmlhttp.setRequestHeader('X-PJAX', 'true');
-			xmlhttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+			//Add headers so things can tell the request is being performed via AJAX.
+			xmlhttp.setRequestHeader('X-PJAX', 'true'); //PJAX header
+			xmlhttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest');//Standard AJAX header.
 
 			xmlhttp.send(null);
 	}
@@ -226,7 +227,7 @@
 	 *
 	 * @scope private
 	 * @param options
-	 * @return false | valid options
+	 * @return false | valid options object
 	 */
 	internal.parseOptions = function(options){
 		//Defaults. (if somthing isn't provided)
@@ -276,13 +277,13 @@
 		if(typeof options.success == 'function'){
 			internal.addEvent(options.container, 'success', options.success);
 		}
-		//Return options
+		//Return valid options
 		return options;
 	}
 
 	/**
 	 * connect
-	 * Attach links to pjax handlers.
+	 * Attach links to PJAX handlers.
 	 * @scope public
 	 *
 	 * Can be called in 3 ways.
@@ -341,7 +342,7 @@
 	
 	/**
 	 * invoke
-	 * Directly invoke a pjax load.
+	 * Directly invoke a pjax page load.
 	 * invoke({url: 'file.php', 'container':'content'});
 	 *
 	 * @scope public
@@ -356,7 +357,7 @@
 		}else{
 			options = arguments[0];
 		}
-		//If Pjax isn't supported by the current browser, push user to specified page.
+		//If PJAX isn't supported by the current browser, push user to specified page.
 		if(!internal.is_supported){
 			document.location = options.url;
 			return;	
@@ -367,6 +368,6 @@
 		if(options !== false) internal.handle(options);
 	}
 
-	//Make object accessable
+	//Make PJAX object accessible
 	window.pjax = this;
 }).call({});
