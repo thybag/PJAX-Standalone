@@ -286,7 +286,7 @@
 			options.parseLinksOnload = opt.parseLinksOnload;
 		}
 
-		//Get container (if its an id, convert to dom node.)
+		//Get container (if its an id, convert it to a dom node.)
 		if(typeof options.container == 'string' ) {
 			container = document.getElementById(options.container);
 			if(container == null){

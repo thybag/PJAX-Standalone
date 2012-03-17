@@ -1,20 +1,21 @@
 # PJAX-Standalone#
 
-A standalone implementation of push state AJAX, designed for use on non-jquery web pages.
+A standalone implementation of push state AJAX, designed for use on non-JQuery web pages.
 The design is loosely based on the original jquery implementation found at: https://github.com/defunkt/jquery-pjax
 
 This code is licensed under the MIT Licence.
 
-This code has not yet been properly cross browser tested.
+This code has been tested in Chrome, Firefox, Opera and IE7,8 and 9. 
+PJAX is supported in Chrome, Firefox and Opera, while in IE the fallbacks operate as expected.
 
 ### Usage Instructions
 
-To add pjax to your page, you will need to include the pjax-standalone.js script in to the head.
+To add pjax to your page, you will need to include the pjax-standalone.js script in to the head of your document.
 
-Once done, pjax can be setup in 3 ways. 
+Once done, PJAX can be setup in 3 ways. 
 
 #### Option 1
-Give all links a data-pjax attribute specifing where to place loaded content:
+Give all links a data-pjax attribute specifing where to place the content that gets loaded.:
 
     <a href='page1.php' data-pjax='content'>Page 1</a>
 
@@ -27,7 +28,7 @@ Add links normally
 
 	<a href='page2.php'>Page 2</a>
 	
-Then specify what container they should use to place loaded content in.
+Then specify which container they should use, via either
 
 	pjax.connect('content');
 
@@ -36,7 +37,7 @@ or
 	pjax.connect({container: 'content'});
 
 #### Option 3
-Setup all links with a specific class to use a particular container to place there content.
+Set all links with a specific class to use a particular container using:
 
 ```
 	<a href='page2.php' class='pjaxer'>Page 2</a>
@@ -63,11 +64,16 @@ The callbacks are specified as part of the original pjax.connect method:
 		'complete': function(){console.log("done!");},
 	});
 
-### Use PJAX-Standalone programmatically
+In addition to the callbacks the following options can also be provided to PJAX connect.
+
+* useClass - string - Apply PJAX only to links with the provided class.
+* parseLinksOnload - true|false - Make links in loaded pages use PJAX. Enabled by default..
+
+### Using PJAX-Standalone programmatically
 
 You can invoke a pjax page load programmitcally by calling the pjax.invoke() method.
 At minimum the pjax invoke method must be given a url and container attribute. It can also
-be provided with a title and any callback you wish to use.
+be provided with a title, parseLinksOnload setting and any callbacks you wish to use.
 
 	pjax.invoke({url:'page1.php', 'container': 'content'});
 
