@@ -140,6 +140,27 @@
 			internal.handle(options);
 		});
 	}
+	/**
+	 * parseLinks
+	 * Parse all links within a dom node, using settings provided in options.
+	 * @scope private
+	 * @param dom_obj. Dom node to parse for links.
+	 * @param options. Valid Options object.
+	 */
+	internal.parseLinks = function(dom_obj, options){
+		if(typeof options._class != 'undefined'){
+			//Get all nodes with the provided classname.
+			nodes = dom_obj.getElementsByClassName(options._class);
+		}else{
+			//If no class was provided, just get all the links
+			nodes = dom_obj.getElementsByTagName('a');
+		}
+		//For all returned nodes
+		for(var i=0; i<nodes.length; i++){
+			node = nodes[i];
+			internal.attach(node, internal.clone(options));
+		}
+	}
 
 	/**
 	 * handle
@@ -169,9 +190,16 @@
 			//Update the dom with the new content
 			options.container.innerHTML = html;
 
-			//Get the title if there is one. (overrides provided titles)
-			if(options.container.getElementsByTagName('title').length != 0){
-				options.title = options.container.getElementsByTagName('title')[0].innerHTML;
+			//Initalise any links found within document.
+			internal.parseLinks(options.container, options);
+
+
+			//If no title was provided
+			if(options.title == document.title){
+				//Attempt to grab title from page contents.
+				if(options.container.getElementsByTagName('title').length != 0){
+					options.title = options.container.getElementsByTagName('title')[0].innerHTML;
+				}
 			}
 			
 			//Do we need to add this to the history?
@@ -281,6 +309,8 @@
 		return options;
 	}
 
+
+
 	/**
 	 * connect
 	 * Attach links to PJAX handlers.
@@ -324,19 +354,8 @@
 
 		//Dont run until the window is ready.
 		internal.addEvent(window, 'load', function(){	
-
-			if(typeof options._class != 'undefined'){
-				//Get all nodes with the provided classname.
-				nodes = document.getElementsByClassName(options._class);
-			}else{
-				//If no class was provided, just get all the links
-				nodes = document.getElementsByTagName('a');
-			}
-			//For all returned nodes
-			for(var i=0; i<nodes.length; i++){
-				node = nodes[i];
-				internal.attach(node, internal.clone(options));
-			}
+			//Parse links using specified options
+			internal.parseLinks(document, options);
 		});
 	}
 	
