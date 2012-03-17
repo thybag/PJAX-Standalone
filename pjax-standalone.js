@@ -4,7 +4,7 @@
  * A standalone implementation of Pushstate AJAX, for non-JQuery webpages.
  * JQuery users should use the original implimention at: https://github.com/defunkt/jquery-pjax
  * 
- * @version 0.3
+ * @version 0.4
  * @author Carl
  * @source https://github.com/thybag/PJAX-Standalone
  * @license MIT
@@ -148,9 +148,9 @@
 	 * @param options. Valid Options object.
 	 */
 	internal.parseLinks = function(dom_obj, options){
-		if(typeof options._class != 'undefined'){
+		if(typeof options.useClass != 'undefined'){
 			//Get all nodes with the provided classname.
-			nodes = dom_obj.getElementsByClassName(options._class);
+			nodes = dom_obj.getElementsByClassName(options.useClass);
 		}else{
 			//If no class was provided, just get all the links
 			nodes = dom_obj.getElementsByTagName('a');
@@ -196,10 +196,12 @@
 			}
 			
 			//If no title was provided
-			if(options.title == document.title){
+			if(typeof options.title == 'undefined'){
 				//Attempt to grab title from page contents.
 				if(options.container.getElementsByTagName('title').length != 0){
 					options.title = options.container.getElementsByTagName('title')[0].innerHTML;
+				}else{
+					options.title = document.title;
 				}
 			}
 			
@@ -262,7 +264,6 @@
 		//Defaults. (if somthing isn't provided)
 		opt = {};
 		opt.history = true;
-		opt.title = document.title;
 		opt.parseLinksOnload = true;
 
 		//Ensure a url and container have been provided.
@@ -278,10 +279,6 @@
 		}else{
 			//Ensure its bool.
 			options.history = (!(options.history == false));
-		}
-		//Find out if title has been provided, if not, use default
-		if(typeof options.title == 'undefined'){
-			options.title = opt.title;
 		}
 		//Parse Links on load? Enabled by default.
 		//(Proccess pages loaded via PJAX and setup PJAX on any links found.)
@@ -346,7 +343,7 @@
 		//connect(container, class_to_apply_to)
 		if(arguments.length == 2){
 			options.container = arguments[0];
-			options._class = arguments[1];
+			options.useClass = arguments[1];
 		}
 		//Either json or container id
 		if(arguments.length == 1){
@@ -358,6 +355,9 @@
 				options = arguments[0];
 			}
 		}
+		//Delete history and title if provided. These options should only be provided via invoke();
+		delete options.title;
+		delete options.history;
 
 		//Dont run until the window is ready.
 		internal.addEvent(window, 'load', function(){	
