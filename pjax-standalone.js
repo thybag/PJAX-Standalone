@@ -250,6 +250,10 @@
 				window.history.pushState({'url': options.url, 'container': options.container.id }, options.title , options.url);
 			}
 
+			//If Google analytics is detected push a trackPageView, so PJAX pages can 
+			//be tracked successfully.
+			if(window._gaq) _gaq.push(['_trackPageview']);
+
 			//Set new title
 			document.title = options.title;
 		});
