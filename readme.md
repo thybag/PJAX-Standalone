@@ -8,6 +8,8 @@ This code is licensed under the MIT Licence.
 This code has been tested in Chrome, Firefox, Opera and IE7,8 and 9. 
 PJAX is supported in Chrome, Firefox and Opera, while in IE the fallbacks operate as expected.
 
+A live version of the demo can be viewed here: http://userbag.co.uk/demo/pjax/
+
 ### Usage Instructions
 
 To add pjax to your page, you will need to include the pjax-standalone.js script in to the head of your document.
