@@ -4,7 +4,7 @@
  * A standalone implementation of Pushstate AJAX, for non-JQuery webpages.
  * JQuery users should use the original implimention at: https://github.com/defunkt/jquery-pjax
  * 
- * @version 0.4
+ * @version 0.5
  * @author Carl
  * @source https://github.com/thybag/PJAX-Standalone
  * @license MIT
@@ -161,6 +161,37 @@
 			internal.attach(node, internal.clone(options));
 		}
 	}
+	/**
+	 * SmartLoad
+	 * Smartload checks the returned HTML to ensure PJAX ready content has been provided rather than
+     * a full HTML page. If a full HTML has been returned, it will attempt to scan the page and extract
+     * the correct html to update our container with in order to ensure PJAX still functions as expected.
+	 *
+	 * @scope private
+	 * @param html (HTML returned from AJAX)
+	 * @param options (Options object used to request page)
+	 * @return HTML to append to our page.
+	 */
+	internal.smartLoad = function(html, options){
+		//Create tmp node (So we can interact with it via the DOM)
+		var tmp = document.createElement('div');
+		//Add html
+		tmp.innerHTML = html; 
+		//Look through all returned divs.
+		tmpNodes = tmp.getElementsByTagName('div');
+		for(var i=0;i<tmpNodes.length;i++){
+			if(tmpNodes[i].id == options.container.id){
+				// If our container div is within the returned HTML, we both know the returned content is
+				//not PJAX ready, but instead likely the full HTML content. in Addition we can also guess that
+				//the content of this node is what we want to update our container with.
+				//Thus use this content as the HTML to append in to our page via PJAX.
+				return tmpNodes[i].innerHTML; 
+				break;
+			}
+		}
+		//If our container was not found, HTML will be returned as is.
+		return html;
+	}
 
 	/**
 	 * handle
@@ -187,6 +218,9 @@
 				internal.triggerEvent(options.container,'success');
 			}
 
+			//Ensure we have the correct HTML to apply to our container.
+			if(options.smartLoad) html = internal.smartLoad(html, options);
+			
 			//Update the dom with the new content
 			options.container.innerHTML = html;
 
@@ -265,6 +299,7 @@
 		opt = {};
 		opt.history = true;
 		opt.parseLinksOnload = true;
+		opt.smartLoad = true;
 
 		//Ensure a url and container have been provided.
 		if(typeof options.url == 'undefined' || typeof options.container == 'undefined'){
@@ -280,10 +315,18 @@
 			//Ensure its bool.
 			options.history = (!(options.history == false));
 		}
+
 		//Parse Links on load? Enabled by default.
 		//(Proccess pages loaded via PJAX and setup PJAX on any links found.)
 		if(typeof options.parseLinksOnload == 'undefined'){
 			options.parseLinksOnload = opt.parseLinksOnload;
+		}
+
+		//Smart load (enabled by default.) Trys to ensure the correct HTML is loaded.
+		//If you are certain your backend will only return PJAX ready content this can be disabled
+		//for a slight perfomance boost.
+		if(typeof options.smartLoad == 'undefined'){
+			options.smartLoad = opt.smartLoad;
 		}
 
 		//Get container (if its an id, convert it to a dom node.)
@@ -312,8 +355,6 @@
 		//Return valid options
 		return options;
 	}
-
-
 
 	/**
 	 * connect

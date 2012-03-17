@@ -10,7 +10,7 @@
 		pjax.connect({
 			'container': 'content',
 			'beforeSend': function(){console.log("before send");},
-			'complete': function(){console.log("done!");},
+			'complete': function(){console.log("done!");}
 		});
 		//pjax.connect('content', 'pjaxer');
 		//pjax.connect('content');

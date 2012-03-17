@@ -67,7 +67,8 @@ The callbacks are specified as part of the original pjax.connect method:
 In addition to the callbacks the following options can also be provided to PJAX connect.
 
 * useClass - string - Apply PJAX only to links with the provided class.
-* parseLinksOnload - true|false - Make links in loaded pages use PJAX. Enabled by default..
+* parseLinksOnload - true|false - Make links in loaded pages use PJAX. Enabled by default.
+* smartLoad - true|false - Ensure returned HTML is correct. Enabled by default.
 
 ### Using PJAX-Standalone programmatically
 
@@ -92,6 +93,10 @@ Update your code to return only the main content area when the X-PJAX header is 
 	}else{
 		//Output content with wrapper/layout
 	}
+
+If you are unable to change the backend code, or simply do not want to. So long as smartLoad is enabled (which it is by default), PJAX-Standalone will extract the container_divs content from the returned HTML and apply it to the current page meaning PJAX loading will still work as expect (although some of PJAX's performance gains may be lost).
+
+
 	
 	
 	
