@@ -10,12 +10,4 @@ $contents = '
 
 //Page 1 returns the full HTML, not the PJAX content and is then correct by the smartLoad feature.
 include 'wrapper.php';
-/*
-$headers = getallheaders();
-if(($headers['X-PJAX'] == 'true')){
-	echo $contents;
-	echo "<title>{$title}</title>";
-}else{
-	include 'wrapper.php';
-}
-*/
+

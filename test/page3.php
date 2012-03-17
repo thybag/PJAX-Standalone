@@ -16,8 +16,7 @@ $contents = '
 	</p>
 ';
 
-$headers = getallheaders();
-if(($headers['X-PJAX'] == 'true')){
+if($_SERVER['HTTP_X_PJAX'] == 'true'){
 	echo $contents;
 	echo "<title>{$title}</title>";
 }else{
