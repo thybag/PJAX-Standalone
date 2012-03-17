@@ -1,9 +1,10 @@
 <?php
 
-$title = 'Page 1: Ideed.';
+$title = 'Page 1: Hello Tester';
 $contents = '
-	<h1>Page 1</h1>
-	<p>Nunc dui massa, tincidunt non interdum id, iaculis vitae tellus. Donec et lectus at neque consectetur facilisis nec eget ante. Proin egestas volutpat semper. Mauris aliquam metus eget nibh tincidunt luctus sit amet id mauris. Aliquam vitae ipsum diam, at rutrum arcu. Suspendisse potenti. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.</p>
+	<h1>Page 1 - Actual time.</h1>
+	<p>The real time is: <strong>'.date('l jS \of F Y h:i:s A').'</strong>.</p>
+	<p>If the above time does not match that of the "Loaded at" then this page was requested via PJAX.</p>
 ';
 
 $headers = getallheaders();
