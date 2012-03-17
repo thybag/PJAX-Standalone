@@ -190,10 +190,11 @@
 			//Update the dom with the new content
 			options.container.innerHTML = html;
 
-			//Initalise any links found within document.
-			internal.parseLinks(options.container, options);
-
-
+			//Initalise any links found within document (if enabled).
+			if(options.parseLinksOnload){
+				internal.parseLinks(options.container, options);
+			}
+			
 			//If no title was provided
 			if(options.title == document.title){
 				//Attempt to grab title from page contents.
@@ -262,6 +263,7 @@
 		opt = {};
 		opt.history = true;
 		opt.title = document.title;
+		opt.parseLinksOnload = true;
 
 		//Ensure a url and container have been provided.
 		if(typeof options.url == 'undefined' || typeof options.container == 'undefined'){
@@ -280,6 +282,11 @@
 		//Find out if title has been provided, if not, use default
 		if(typeof options.title == 'undefined'){
 			options.title = opt.title;
+		}
+		//Parse Links on load? Enabled by default.
+		//(Proccess pages loaded via PJAX and setup PJAX on any links found.)
+		if(typeof options.parseLinksOnload == 'undefined'){
+			options.parseLinksOnload = opt.parseLinksOnload;
 		}
 
 		//Get container (if its an id, convert to dom node.)
