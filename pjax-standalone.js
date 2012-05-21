@@ -209,15 +209,6 @@
 		//Do the request
 		internal.request(options.url, function(html){
 
-			//Fire Events
-			internal.triggerEvent(options.container,'complete');
-			if(html == false){//Somthing went wrong
-				internal.triggerEvent(options.container,'error');
-				return;
-			}else{//got what we expected.
-				internal.triggerEvent(options.container,'success');
-			}
-
 			//Ensure we have the correct HTML to apply to our container.
 			if(options.smartLoad) html = internal.smartLoad(html, options);
 			
@@ -248,6 +239,15 @@
 				}
 				//Update browser history
 				window.history.pushState({'url': options.url, 'container': options.container.id }, options.title , options.url);
+			}
+
+			//Fire Events
+			internal.triggerEvent(options.container,'complete');
+			if(html == false){//Somthing went wrong
+				internal.triggerEvent(options.container,'error');
+				return;
+			}else{//got what we expected.
+				internal.triggerEvent(options.container,'success');
 			}
 
 			//If Google analytics is detected push a trackPageView, so PJAX pages can 
