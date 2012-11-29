@@ -30,7 +30,7 @@ $contents = '
 	
 ';
 
-if($_SERVER['HTTP_X_PJAX'] == 'true'){
+if(isset($_SERVER['HTTP_X_PJAX']) && $_SERVER['HTTP_X_PJAX'] == 'true'){
 	echo $contents;
 	echo "<title>{$title}</title>";
 }else{

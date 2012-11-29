@@ -102,7 +102,7 @@
 					<a href='.' data-pjax='content'>Home</a>
 					<a href='page1.php' data-pjax='content'>Page 1</a>
 					<a href='page2.php' data-pjax='content'>Page 2</a>
-					<a href='page3.php'>Page 3</a>
+					<a href='page3.php?test=test'>Page 3</a>
 				</div>
 			</div>
 			<div id='content'>
