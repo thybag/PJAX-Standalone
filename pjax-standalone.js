@@ -148,6 +148,7 @@
 	 * @param options. Valid Options object.
 	 */
 	internal.parseLinks = function(dom_obj, options){
+
 		if(typeof options.useClass != 'undefined'){
 			//Get all nodes with the provided classname.
 			nodes = dom_obj.getElementsByClassName(options.useClass);
@@ -156,9 +157,12 @@
 			nodes = dom_obj.getElementsByTagName('a');
 		}
 		//For all returned nodes
-		for(var i=0; i<nodes.length; i++){
+		for(var i=0,tmp_opt; i < nodes.length; i++){
 			node = nodes[i];
-			internal.attach(node, internal.clone(options));
+			//Override options history to true, else link parsing could be triggered by backbutton (which runs in no-history mode)
+			tmp_opt = internal.clone(options);
+			tmp_opt.history = true;
+			internal.attach(node, tmp_opt);
 		}
 	}
 	/**
@@ -313,7 +317,7 @@
 		}
 
 		//Find out if history has been provided
-		if(typeof options.history == 'undefined'){
+		if(typeof options.history === 'undefined'){
 			//use default
 			options.history = opt.history;
 		}else{
