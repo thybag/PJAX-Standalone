@@ -408,12 +408,16 @@
 		//Delete history and title if provided. These options should only be provided via invoke();
 		delete options.title;
 		delete options.history;
-
-		//Dont run until the window is ready.
-		internal.addEvent(window, 'load', function(){	
-			//Parse links using specified options
+		
+		if(document.readyState == 'complete') {
 			internal.parseLinks(document, options);
-		});
+		} else {
+			//Dont run until the window is ready.
+			internal.addEvent(window, 'load', function(){	
+				//Parse links using specified options
+				internal.parseLinks(document, options);
+			});
+		}
 	}
 	
 	/**
