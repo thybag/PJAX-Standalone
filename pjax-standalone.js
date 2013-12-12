@@ -181,6 +181,12 @@
 		var tmp = document.createElement('div');
 		//Add html
 		tmp.innerHTML = html; 
+
+                //grab the title if there is one
+                var title = tmp.querySelector('title');
+                if(title)
+                     document.title = title.innerHTML;
+		
 		//Look through all returned divs.
 		tmpNodes = tmp.getElementsByTagName('div');
 		for(var i=0;i<tmpNodes.length;i++){
