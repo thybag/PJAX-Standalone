@@ -84,12 +84,22 @@
 	 */
 	internal.addEvent(window, 'popstate', function(st){
 		if(st.state != null){
-			//Convert state data to pjax options
-			var options = internal.parseOptions({	
+
+			var opt = {	
 				'url': st.state.url, 
 				'container': st.state.container, 
 				'history': false
-			});
+			}
+			
+			// Merge original in original connect options
+			if(typeof internal.options !== 'undefined'){
+				for(var a in internal.options){ 
+					if(typeof opt[a] === 'undefined') opt[a] = internal.options[a];
+				} 	
+			}
+
+			//Convert state data to pjax options
+			var options = internal.parseOptions(opt);
 			//If somthing went wrong, return.
 			if(options == false) return;
 			//If there is a state object, handle it as a page load.
@@ -148,7 +158,6 @@
 	 * @param options. Valid Options object.
 	 */
 	internal.parseLinks = function(dom_obj, options){
-
 		if(typeof options.useClass != 'undefined'){
 			//Get all nodes with the provided classname.
 			nodes = dom_obj.getElementsByClassName(options.useClass);
@@ -411,10 +420,11 @@
 				options = arguments[0];
 			}
 		}
-		//Delete history and title if provided. These options should only be provided via invoke();
+		// Delete history and title if provided. These options should only be provided via invoke();
 		delete options.title;
 		delete options.history;
 		
+		internal.options = options;
 		if(document.readyState == 'complete') {
 			internal.parseLinks(document, options);
 		} else {
