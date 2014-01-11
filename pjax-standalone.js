@@ -90,7 +90,7 @@
 				'container': st.state.container, 
 				'history': false
 			}
-			
+
 			// Merge original in original connect options
 			if(typeof internal.options !== 'undefined'){
 				for(var a in internal.options){ 
@@ -464,6 +464,16 @@
 		if(options !== false) internal.handle(options);
 	}
 
-	//Make PJAX object accessible
-	window.pjax = this;
+	var pjax_obj = this;
+	if (typeof define === 'function' && define['amd']) {
+		// register pjax as AMD module
+		define( function() {
+            return pjax_obj;
+        });
+	}else{
+		// Make PJAX object accessible in global namespace
+		window.pjax = pjax_obj;
+	}
+
+
 }).call({});
