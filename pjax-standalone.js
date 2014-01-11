@@ -182,24 +182,24 @@
 		//Add html
 		tmp.innerHTML = html; 
 
-                //grab the title if there is one
-                var title = tmp.querySelector('title');
-                if(title)
-                     document.title = title.innerHTML;
-		
-		//Look through all returned divs.
+        // Grab the title if there is one (maintain IE7 compatability)
+	    var title = tmp.getElementsByTagName('title')[0].innerHTML;
+	    if(title)
+           document.title = title;
+
+		// Look through all returned divs.
 		tmpNodes = tmp.getElementsByTagName('div');
 		for(var i=0;i<tmpNodes.length;i++){
 			if(tmpNodes[i].id == options.container.id){
 				// If our container div is within the returned HTML, we both know the returned content is
-				//not PJAX ready, but instead likely the full HTML content. in Addition we can also guess that
-				//the content of this node is what we want to update our container with.
-				//Thus use this content as the HTML to append in to our page via PJAX.
+				// not PJAX ready, but instead likely the full HTML content. in Addition we can also guess that
+				// the content of this node is what we want to update our container with.
+				// Thus use this content as the HTML to append in to our page via PJAX.
 				return tmpNodes[i].innerHTML; 
 				break;
 			}
 		}
-		//If our container was not found, HTML will be returned as is.
+		// If our container was not found, HTML will be returned as is.
 		return html;
 	}
 
@@ -232,7 +232,7 @@
 			
 			//If no title was provided
 			if(typeof options.title == 'undefined'){
-				//Attempt to grab title from page contents.
+				// Attempt to grab title from page contents.
 				if(options.container.getElementsByTagName('title').length != 0){
 					options.title = options.container.getElementsByTagName('title')[0].innerHTML;
 				}else{
