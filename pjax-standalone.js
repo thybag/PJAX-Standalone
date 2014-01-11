@@ -116,29 +116,36 @@
 	 */
 	internal.attach = function(node, options){
 
-		//if no pushstate support, dont attach and let stuff work as normal.
+		// if no pushstate support, dont attach and let stuff work as normal.
 		if(!internal.is_supported) return;
 
-		//Ignore external links.
+		// Ignore external links.
 		if ( node.protocol !== document.location.protocol ||
 			 node.host !== document.location.host ){
 			return;
 		}
-		//Add link href to object
+
+		// Ignore anchors on the same page
+		// https://github.com/defunkt/jquery-pjax/pull/83/files
+	 	if ( node.hash && node.href.replace(node.hash, '') === location.href.replace(location.hash, '') ){
+	 		return true
+	 	}
+
+		// Add link href to object
 		options.url = node.href;
-		//If pjax data is specified, use as container
+		// If pjax data is specified, use as container
 		if(node.getAttribute('data-pjax')){
 			options.container = node.getAttribute('data-pjax');
 		}
-		//If data-title is specified, use as title.
+		// If data-title is specified, use as title.
 		if(node.getAttribute('data-title')){
 			options.title = node.getAttribute('data-title');
 		}
-		//Check options are valid.
+		// Check options are valid.
 		options = internal.parseOptions(options);
 		if(options == false) return;
 
-		//Attach event.
+		// Attach event.
 		internal.addEvent(node, 'click', function(event){
 			//Allow middle click (pages in new windows)
 			if ( event.which > 1 || event.metaKey ) return;
