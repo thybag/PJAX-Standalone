@@ -1,12 +1,12 @@
 # PJAX-Standalone#
 
 A standalone implementation of push state AJAX, designed for use on non-JQuery web pages.
-The design is loosely based on the original jquery implementation found at: https://github.com/defunkt/jquery-pjax
+The design is loosely based on the original jQuery implementation found at: https://github.com/defunkt/jquery-pjax
 
-This code is licensed under the MIT Licence.
+This code is licensed under the MIT License.
 
 This code has been tested in Chrome, Firefox, Opera and IE7,8 and 9. 
-PJAX is supported in Chrome, Firefox and Opera, while in IE the fallbacks operate as expected.
+PJAX is supported in Chrome, Firefox and Opera, while in IE the fall backs operate as expected.
 
 A live version of the demo can be viewed here: http://userbag.co.uk/demo/pjax/
 
@@ -17,7 +17,7 @@ To add pjax to your page, you will need to include the pjax-standalone.js script
 Once done, PJAX can be setup in 3 ways. 
 
 #### Option 1
-Give all links a data-pjax attribute specifing where to place the content that gets loaded.:
+Give all links a data-pjax attribute specifying where to place the content that gets loaded.:
 
     <a href='page1.php' data-pjax='content'>Page 1</a>
 
@@ -74,7 +74,7 @@ In addition to the callbacks the following options can also be provided to PJAX 
 
 ### Using PJAX-Standalone programmatically
 
-You can invoke a pjax page load programmitcally by calling the pjax.invoke() method.
+You can invoke a pjax page load programmatically by calling the pjax.invoke() method.
 At minimum the pjax invoke method must be given a url and container attribute. It can also
 be provided with a title, parseLinksOnload setting and any callbacks you wish to use.
 
