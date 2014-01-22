@@ -4,7 +4,7 @@
  * A standalone implementation of Pushstate AJAX, for non-JQuery webpages.
  * JQuery users should use the original implimention at: https://github.com/defunkt/jquery-pjax
  * 
- * @version 0.5
+ * @version 0.5.2
  * @author Carl
  * @source https://github.com/thybag/PJAX-Standalone
  * @license MIT
@@ -84,12 +84,22 @@
 	 */
 	internal.addEvent(window, 'popstate', function(st){
 		if(st.state != null){
-			//Convert state data to pjax options
-			var options = internal.parseOptions({	
+
+			var opt = {	
 				'url': st.state.url, 
 				'container': st.state.container, 
 				'history': false
-			});
+			}
+
+			// Merge original in original connect options
+			if(typeof internal.options !== 'undefined'){
+				for(var a in internal.options){ 
+					if(typeof opt[a] === 'undefined') opt[a] = internal.options[a];
+				} 	
+			}
+
+			//Convert state data to pjax options
+			var options = internal.parseOptions(opt);
 			//If somthing went wrong, return.
 			if(options == false) return;
 			//If there is a state object, handle it as a page load.
@@ -106,29 +116,35 @@
 	 */
 	internal.attach = function(node, options){
 
-		//if no pushstate support, dont attach and let stuff work as normal.
+		// if no pushstate support, dont attach and let stuff work as normal.
 		if(!internal.is_supported) return;
 
-		//Ignore external links.
+		// Ignore external links.
 		if ( node.protocol !== document.location.protocol ||
 			 node.host !== document.location.host ){
 			return;
 		}
-		//Add link href to object
+
+		// Ignore anchors on the same page
+		if(node.pathname == location.pathname && node.hash.length > 0) {
+	 		return true
+	 	}
+
+		// Add link href to object
 		options.url = node.href;
-		//If pjax data is specified, use as container
+		// If pjax data is specified, use as container
 		if(node.getAttribute('data-pjax')){
 			options.container = node.getAttribute('data-pjax');
 		}
-		//If data-title is specified, use as title.
+		// If data-title is specified, use as title.
 		if(node.getAttribute('data-title')){
 			options.title = node.getAttribute('data-title');
 		}
-		//Check options are valid.
+		// Check options are valid.
 		options = internal.parseOptions(options);
 		if(options == false) return;
 
-		//Attach event.
+		// Attach event.
 		internal.addEvent(node, 'click', function(event){
 			//Allow middle click (pages in new windows)
 			if ( event.which > 1 || event.metaKey ) return;
@@ -148,7 +164,6 @@
 	 * @param options. Valid Options object.
 	 */
 	internal.parseLinks = function(dom_obj, options){
-
 		if(typeof options.useClass != 'undefined'){
 			//Get all nodes with the provided classname.
 			nodes = dom_obj.getElementsByClassName(options.useClass);
@@ -411,10 +426,11 @@
 				options = arguments[0];
 			}
 		}
-		//Delete history and title if provided. These options should only be provided via invoke();
+		// Delete history and title if provided. These options should only be provided via invoke();
 		delete options.title;
 		delete options.history;
 		
+		internal.options = options;
 		if(document.readyState == 'complete') {
 			internal.parseLinks(document, options);
 		} else {
@@ -454,6 +470,16 @@
 		if(options !== false) internal.handle(options);
 	}
 
-	//Make PJAX object accessible
-	window.pjax = this;
+	var pjax_obj = this;
+	if (typeof define === 'function' && define['amd']) {
+		// register pjax as AMD module
+		define( function() {
+            return pjax_obj;
+        });
+	}else{
+		// Make PJAX object accessible in global namespace
+		window.pjax = pjax_obj;
+	}
+
+
 }).call({});
