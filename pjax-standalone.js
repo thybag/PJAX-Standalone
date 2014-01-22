@@ -126,8 +126,7 @@
 		}
 
 		// Ignore anchors on the same page
-		// https://github.com/defunkt/jquery-pjax/pull/83/files
-	 	if ( node.hash && node.href.replace(node.hash, '') === location.href.replace(location.hash, '') ){
+		if(node.pathname == location.pathname && node.hash.length > 0) {
 	 		return true
 	 	}
 
