@@ -65,18 +65,14 @@
 	 * @param node. Objects to fire event on
 	 * @return event_name. type of event
 	 */
-	internal.triggerEvent = function(node, event_name){
-		if (document.createEvent) {
-			//Good browsers
-			evt = document.createEvent("HTMLEvents");
-    		evt.initEvent(event_name, true, true);
-    		node.dispatchEvent(evt);
-		}else{
-			//old IE versions
-			evt = document.createEventObject();
-    		evt.eventType = 'on'+ event_name;
-    		node.fireEvent(evt.eventType, evt);
-		}
+	internal.triggerEvent = function(options, event){
+
+        if(typeof options[event] === 'function') {
+
+            // Call the callback with the url it was called for
+            options[event].call(this, options.url, options.container);
+
+        }
 	}
 	/**
 	 * popstate listener
@@ -229,7 +225,7 @@
 	internal.handle = function(options){
 		
 		//Fire beforeSend Event.
-		internal.triggerEvent(options.container, 'beforeSend');
+		internal.triggerEvent(options, 'beforeSend');
 
 		//Do the request
 		internal.request(options.url, function(html){
@@ -267,12 +263,12 @@
 			}
 
 			//Fire Events
-			internal.triggerEvent(options.container,'complete');
+			internal.triggerEvent(options, 'complete');
 			if(html == false){//Somthing went wrong
-				internal.triggerEvent(options.container,'error');
+				internal.triggerEvent(options, 'error');
 				return;
 			}else{//got what we expected.
-				internal.triggerEvent(options.container,'success');
+				internal.triggerEvent(options, 'success');
 			}
 
 			//If Google analytics is detected push a trackPageView, so PJAX pages can 
@@ -369,19 +365,6 @@
 			options.container = container;
 		}
 
-		//If everything went ok thus far, connect up listeners
-		if(typeof options.beforeSend == 'function'){
-			internal.addEvent(options.container, 'beforeSend', options.beforeSend);
-		}
-		if(typeof options.complete == 'function'){
-			internal.addEvent(options.container, 'complete', options.complete);
-		}
-		if(typeof options.error == 'function'){
-			internal.addEvent(options.container, 'error', options.error);
-		}
-		if(typeof options.success == 'function'){
-			internal.addEvent(options.container, 'success', options.success);
-		}
 		//Return valid options
 		return options;
 	}
