@@ -12,7 +12,7 @@ A live version of the demo can be viewed here: http://userbag.co.uk/demo/pjax/
 
 ### Usage Instructions
 
-To add pjax to your page, you will need to include the pjax-standalone.js script in to the head of your document.
+To use pjax on your page you will need to include the pjax-standalone.js script in to the head of the page. Alternatly, if the assets for your site are built (using a tool like grunt) pjax standalone can also be installed using bower `bower install pjax-standalone`.
 
 Once done, PJAX can be setup in 3 ways. 
 
