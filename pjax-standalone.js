@@ -4,7 +4,7 @@
  * A standalone implementation of Pushstate AJAX, for non-JQuery webpages.
  * JQuery users should use the original implimention at: https://github.com/defunkt/jquery-pjax
  * 
- * @version 0.5.2
+ * @version 0.5.3
  * @author Carl
  * @source https://github.com/thybag/PJAX-Standalone
  * @license MIT
@@ -238,15 +238,7 @@
 
 			// Ensure we have the correct HTML to apply to our container.
 			if(options.smartLoad) html = internal.smartLoad(html, options);
-			
-			// Update the dom with the new content
-			options.container.innerHTML = html;
 
-			// Initalise any links found within document (if enabled).
-			if(options.parseLinksOnload){
-				internal.parseLinks(options.container, options);
-			}
-			
 			// If no title was provided
 			if(typeof options.title === 'undefined'){
 				// Attempt to grab title from page contents.
@@ -256,6 +248,9 @@
 					options.title = document.title;
 				}
 			}
+
+			// Update the dom with the new content
+			options.container.innerHTML = html;
 			
 			// Do we need to add this to the history?
 			if(options.history){
@@ -266,6 +261,11 @@
 				}
 				// Update browser history
 				window.history.pushState({'url': options.url, 'container': options.container.id }, options.title , options.url);
+			}
+
+			// Initalise any new links found within document (if enabled).
+			if(options.parseLinksOnload){
+				internal.parseLinks(options.container, options);
 			}
 
 			// Fire Events
