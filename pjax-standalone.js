@@ -1,8 +1,8 @@
 /**
  * PJAX- Standalone
  *
- * A standalone implementation of Pushstate AJAX, for non-JQuery webpages.
- * JQuery users should use the original implimention at: https://github.com/defunkt/jquery-pjax
+ * A standalone implementation of Pushstate AJAX, for non-JQuery web pages.
+ * JQuery are recommended to use the original implementation at: https://github.com/defunkt/jquery-pjax
  * 
  * @version 0.5.3
  * @author Carl
