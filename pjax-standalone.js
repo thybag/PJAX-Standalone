@@ -148,9 +148,9 @@
 		// Attach event.
 		internal.addEvent(node, 'click', function(event){
 			// Allow middle click (pages in new windows)
-			if ( event.which > 1 || event.metaKey ) return;
+			if ( event.which > 1 || event.metaKey || event.ctrlKey ) return;
 			// Dont fire normal event
-			if(event.preventDefault){event.preventDefault();}else{event.returnValue = false;}
+			if(event.preventDefault){ event.preventDefault(); }else{ event.returnValue = false; }
 			// Take no action if we are already on said page?
 			if(document.location.href === options.url) return false;
 			// handle the load.
