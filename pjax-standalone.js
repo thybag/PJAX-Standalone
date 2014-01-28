@@ -280,6 +280,8 @@
 			// If Google analytics is detected push a trackPageView, so PJAX pages can 
 			// be tracked successfully.
 			if(window._gaq) _gaq.push(['_trackPageview']);
+			if(window.ga) ga('send', 'pageview', {'page': options.url, 'title': options.title});
+
 
 			// Set new title
 			document.title = options.title;
