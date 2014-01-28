@@ -13,7 +13,7 @@
 
 	// Object to store private values/methods.
 	var internal = {
-		// Is this the first usage of pjax? (Ensure history entery has required values if so.)
+		// Is this the first usage of pjax? (Ensure history entry has required values if so.)
 		"firstrun": true,
 		// Borrowed wholesale from https://github.com/defunkt/jquery-pjax
 		// Attempt to check that a device supports pushstate before attempting to use it.
@@ -21,8 +21,8 @@
 	};
 	
 	// If PJAX isn't supported we can skip setting up the library all together
-	// So as not to break any code expecing pjax to be there, return a shell object containing
-	// IE7 + compatable versions of connect (which needs to do nothing) and invoke ( which just changes the page)
+	// So as not to break any code expecting pjax to be there, return a shell object containing
+	// IE7 + compatible versions of connect (which needs to do nothing) and invoke ( which just changes the page)
 	if(!internal.is_supported) {
 		// Pjax shell, so any code expecting pjax will work
 		var pjax_shell = {
@@ -56,8 +56,8 @@
 
 	/**
 	 * Clone
-	 * Util method to create copys of the options object (so they do not share references)
-	 * This allows custom settings on differnt links.
+	 * Util method to create copies of the options object (so they do not share references)
+	 * This allows custom settings on different links.
 	 *
 	 * @scope private
 	 * @param obj
@@ -110,7 +110,7 @@
 
 			// Convert state data to pjax options
 			var options = internal.parseOptions(opt);
-			// If somthing went wrong, return.
+			// If something went wrong, return.
 			if(options === false) return;
 			// If there is a state object, handle it as a page load.
 			internal.handle(options);
@@ -124,11 +124,11 @@
 	 * @param link_node. link that will be clicked.
 	 * @param content_node. 
 	 */
-	internal.attach = function(node, options){
+	internal.attach = function(node, options) {
 
 		// Ignore external links.
 		if ( node.protocol !== document.location.protocol ||
-			node.host !== document.location.host ){
+			node.host !== document.location.host ) {
 			return;
 		}
 
@@ -140,11 +140,11 @@
 		// Add link href to object
 		options.url = node.href;
 		// If pjax data is specified, use as container
-		if(node.getAttribute('data-pjax')){
+		if(node.getAttribute('data-pjax')) {
 			options.container = node.getAttribute('data-pjax');
 		}
 		// If data-title is specified, use as title.
-		if(node.getAttribute('data-title')){
+		if(node.getAttribute('data-title')) {
 			options.title = node.getAttribute('data-title');
 		}
 		// Check options are valid.
@@ -152,7 +152,7 @@
 		if(options === false) return;
 
 		// Attach event.
-		internal.addEvent(node, 'click', function(event){
+		internal.addEvent(node, 'click', function(event) {
 			// Allow middle click (pages in new windows)
 			if ( event.which > 1 || event.metaKey || event.ctrlKey ) return;
 			// Dont fire normal event
@@ -166,14 +166,14 @@
 
 	/**
 	 * parseLinks
-	 * Parse all links within a dom node, using settings provided in options.
+	 * Parse all links within a DOM node, using settings provided in options.
 	 * @scope private
 	 * @param dom_obj. Dom node to parse for links.
 	 * @param options. Valid Options object.
 	 */
-	internal.parseLinks = function(dom_obj, options){
+	internal.parseLinks = function(dom_obj, options) {
 		if(typeof options.useClass != 'undefined'){
-			// Get all nodes with the provided classname.
+			// Get all nodes with the provided class name.
 			nodes = dom_obj.getElementsByClassName(options.useClass);
 		}else{
 			// If no class was provided, just get all the links
@@ -182,7 +182,7 @@
 		// For all returned nodes
 		for(var i=0,tmp_opt; i < nodes.length; i++){
 			node = nodes[i];
-			// Override options history to true, else link parsing could be triggered by backbutton (which runs in no-history mode)
+			// Override options history to true, else link parsing could be triggered by back button (which runs in no-history mode)
 			tmp_opt = internal.clone(options);
 			tmp_opt.history = true;
 			internal.attach(node, tmp_opt);
@@ -193,18 +193,18 @@
 	 * SmartLoad
 	 * Smartload checks the returned HTML to ensure PJAX ready content has been provided rather than
 	 * a full HTML page. If a full HTML has been returned, it will attempt to scan the page and extract
-	 * the correct html to update our container with in order to ensure PJAX still functions as expected.
+	 * the correct HTML to update our container with in order to ensure PJAX still functions as expected.
 	 *
 	 * @scope private
-	 * @param html (HTML returned from AJAX)
+	 * @param HTML (HTML returned from AJAX)
 	 * @param options (Options object used to request page)
 	 * @return HTML to append to our page.
 	 */
-	internal.smartLoad = function(html, options){
+	internal.smartLoad = function(html, options) {
 		// Create tmp node (So we can interact with it via the DOM)
 		var tmp = document.createElement('div');
-		
-		// Add html
+
+		// Add HTML
 		tmp.innerHTML = html; 
 
 		// Grab the title if there is one
@@ -241,7 +241,7 @@
 		internal.triggerEvent(options.container, 'beforeSend', options);
 
 		// Do the request
-		internal.request(options.url, function(html){
+		internal.request(options.url, function(html) {
 
 			// Ensure we have the correct HTML to apply to our container.
 			if(options.smartLoad) html = internal.smartLoad(html, options);
@@ -256,11 +256,11 @@
 				}
 			}
 
-			// Update the dom with the new content
+			// Update the DOM with the new content
 			options.container.innerHTML = html;
 			
 			// Do we need to add this to the history?
-			if(options.history){
+			if(options.history) {
 				// If this is the first time pjax has run, create a state object for the current page.
 				if(internal.firstrun){
 					window.history.replaceState({'url': document.location.href, 'container':  options.container.id}, document.title);
@@ -270,25 +270,27 @@
 				window.history.pushState({'url': options.url, 'container': options.container.id }, options.title , options.url);
 			}
 
-			// Initalise any new links found within document (if enabled).
+			// Initialize any new links found within document (if enabled).
 			if(options.parseLinksOnload){
 				internal.parseLinks(options.container, options);
 			}
 
 			// Fire Events
 			internal.triggerEvent(options.container,'complete', options);
-			if(html === false){//Somthing went wrong
+			if(html === false) { //Something went wrong
 				internal.triggerEvent(options.container,'error', options);
 				return;
-			}else{//got what we expected.
+			} else {//got what we expected.
 				internal.triggerEvent(options.container,'success', options);
 			}
 
-			// If Google analytics is detected push a trackPageView, so PJAX pages can 
-			// be tracked successfully.
-			if(window._gaq) _gaq.push(['_trackPageview']);
-			if(window.ga) ga('send', 'pageview', {'page': options.url, 'title': options.title});
-
+			// Don't track if page isn't part of history, or if autoAnalytics is disabled
+			if(options.autoAnalytics && options.history) {
+				// If autoAnalytics is enabled and a Google analytics tracker is detected push 
+				// a trackPageView, so PJAX loaded pages can be tracked successfully.
+				if(window._gaq) _gaq.push(['_trackPageview']);
+				if(window.ga) ga('send', 'pageview', {'page': options.url, 'title': options.title});
+			}
 			// Set new title
 			document.title = options.title;
 		});
@@ -308,14 +310,14 @@
 			// Add state listener.
 			xmlhttp.onreadystatechange = function(){
 				if ((xmlhttp.readyState === 4) && (xmlhttp.status === 200)) {
-					// Success, Return html
+					// Success, Return HTML
 					callback(xmlhttp.responseText);
 				}else if((xmlhttp.readyState === 4) && (xmlhttp.status === 404 || xmlhttp.status === 500)){
 					// error (return false)
 					callback(false);
 				}
 			};
-			// Secret pjax ?get param so browser doesnt return pjax content from cache when we dont want it to
+			// Secret pjax ?get param so browser doesn't return pjax content from cache when we don't want it to
 			// Switch between ? and & so as not to break any URL params (Based on change by zmasek https://github.com/zmasek/)
 			xmlhttp.open("GET", location + ((!/[?&]/.test(location)) ? '?_pjax' : '&_pjax'), true);
 			// Add headers so things can tell the request is being performed via AJAX.
@@ -334,11 +336,12 @@
 	 * @return false | valid options object
 	 */
 	internal.parseOptions = function(options){
-		// Defaults. (if somthing isn't provided)
+		// Defaults. (if something isn't provided)
 		opt = {};
 		opt.history = true;
 		opt.parseLinksOnload = true;
 		opt.smartLoad = true;
+		opt.autoAnalytics = true;
 
 		// Ensure a url and container have been provided.
 		if(typeof options.url === 'undefined' || typeof options.container === 'undefined'){
@@ -356,16 +359,22 @@
 		}
 
 		// Parse Links on load? Enabled by default.
-		// (Proccess pages loaded via PJAX and setup PJAX on any links found.)
+		// (Process pages loaded via PJAX and setup PJAX on any links found.)
 		if(typeof options.parseLinksOnload === 'undefined'){
 			options.parseLinksOnload = opt.parseLinksOnload;
 		}
 
-		// Smart load (enabled by default.) Trys to ensure the correct HTML is loaded.
-		// If you are certain your backend will only return PJAX ready content this can be disabled
-		// for a slight perfomance boost.
+		// Smart load (enabled by default.) Tries to ensure the correct HTML is loaded.
+		// If you are certain your back end will only return PJAX ready content this can be disabled
+		// for a slight performance boost.
 		if(typeof options.smartLoad === 'undefined'){
 			options.smartLoad = opt.smartLoad;
+		}
+
+		// Automatically attempt to log events to google analytics (if tracker is available)
+		// set autoAnalytics to false to disable
+		if(typeof options.autoAnalytics === 'undefined'){
+			options.autoAnalytics = opt.autoAnalytics;
 		}
 
 		// Get container (if its an id, convert it to a dom node.)
@@ -408,7 +417,7 @@
 	 *		Will try to attach to all links, using the container_id as the target.
 	 *
 	 * Calling as connect(container_id, class_name)
-	 *		Will try to attach any links with the given classname, using container_id as the target.
+	 *		Will try to attach any links with the given class name, using container_id as the target.
 	 *
 	 * Calling as connect({	
 	 *						'url':'somepage.php',
@@ -469,13 +478,13 @@
 			options = arguments[0];
 		}
 
-		// Proccess options
+		// Process options
 		options = internal.parseOptions(options);
-		// If everything went ok, activate pjax.
+		// If everything went okay, activate pjax.
 		if(options !== false) internal.handle(options);
 	};
 
-	// Make object useable
+	// Make object usable
 	var pjax_obj = this;
 	if (typeof define === 'function' && define.amd) {
 		// Register pjax as AMD module
@@ -483,7 +492,7 @@
 			return pjax_obj;
 		});
 	}else{
-		// Make PJAX object accessible in global namespace
+		// Make PJAX object accessible in global name space
 		window.pjax = pjax_obj;
 	}
 
