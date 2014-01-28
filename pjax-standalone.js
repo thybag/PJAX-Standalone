@@ -20,9 +20,30 @@
 		"is_supported": window.history && window.history.pushState && window.history.replaceState && !navigator.userAgent.match(/((iPod|iPhone|iPad).+\bOS\s+[1-4]|WebApps\/.+CFNetwork)/)
 	};
 	
+	// If PJAX isn't supported we can skip setting up the library all together
+	// So as not to break any code expecing pjax to be there, return a shell object containing
+	// IE7 + compatable versions of connect (which needs to do nothing) and invoke ( which just changes the page)
+	if(!internal.is_supported) {
+		// Pjax shell, so any code expecting pjax will work
+		var pjax_shell = {
+			"connect": function() { return; },
+			"invoke": function() {
+		 		var url = (arguments.length === 2) ? arguments[0] : arguments.url;
+		 		document.location = url;
+				return;	
+		 	} 
+		};
+		// amd support
+		if (typeof define === 'function' && define.amd) { 
+			define( function() { return pjax_shell; }); 
+		} else { 
+			window.pjax = pjax_shell; 
+		}
+		return;
+	}
+
 	/**
 	 * AddEvent
-	 * Cross browser compatable method to add event listeners
 	 *
 	 * @scope private
 	 * @param obj Object to listen on
@@ -30,13 +51,7 @@
 	 * @param callback Method to run when event is detected.
 	 */
 	internal.addEvent = function(obj, event, callback){
-		if(window.addEventListener){
-				// Browsers that don't suck
-				obj.addEventListener(event, callback, false);
-		}else{
-				// IE8/7
-				obj.attachEvent('on'+event, callback);
-		}
+		obj.addEventListener(event, callback, false);
 	};
 
 	/**
@@ -65,18 +80,12 @@
 	 * @param node. Objects to fire event on
 	 * @return event_name. type of event
 	 */
-	internal.triggerEvent = function(node, event_name){
-		if (document.createEvent) {
-			// Good browsers
-			evt = document.createEvent("HTMLEvents");
-			evt.initEvent(event_name, true, true);
-			node.dispatchEvent(evt);
-		}else{
-			// old IE versions
-			evt = document.createEventObject();
-			evt.eventType = 'on'+ event_name;
-			node.fireEvent(evt.eventType, evt);
-		}
+	internal.triggerEvent = function(node, event_name, data){
+		// Good browsers
+		evt = document.createEvent("HTMLEvents");
+		evt.initEvent(event_name, true, true);
+		evt.data = data;
+		node.dispatchEvent(evt);
 	};
 
 	/**
@@ -116,9 +125,6 @@
 	 * @param content_node. 
 	 */
 	internal.attach = function(node, options){
-
-		// if no pushstate support, dont attach and let stuff work as normal.
-		if(!internal.is_supported) return;
 
 		// Ignore external links.
 		if ( node.protocol !== document.location.protocol ||
@@ -197,10 +203,11 @@
 	internal.smartLoad = function(html, options){
 		// Create tmp node (So we can interact with it via the DOM)
 		var tmp = document.createElement('div');
+		
 		// Add html
 		tmp.innerHTML = html; 
 
-		// Grab the title if there is one (maintain IE7 compatability)
+		// Grab the title if there is one
 		var title = tmp.getElementsByTagName('title')[0].innerHTML;
 		if(title)
 			document.title = title;
@@ -231,7 +238,7 @@
 	internal.handle = function(options){
 		
 		// Fire beforeSend Event.
-		internal.triggerEvent(options.container, 'beforeSend');
+		internal.triggerEvent(options.container, 'beforeSend', options);
 
 		// Do the request
 		internal.request(options.url, function(html){
@@ -269,19 +276,18 @@
 			}
 
 			// Fire Events
-			internal.triggerEvent(options.container,'complete');
+			internal.triggerEvent(options.container,'complete', options);
 			if(html === false){//Somthing went wrong
-				internal.triggerEvent(options.container,'error');
+				internal.triggerEvent(options.container,'error', options);
 				return;
 			}else{//got what we expected.
-				internal.triggerEvent(options.container,'success');
+				internal.triggerEvent(options.container,'success', options);
 			}
 
 			// If Google analytics is detected push a trackPageView, so PJAX pages can 
 			// be tracked successfully.
 			if(window._gaq) _gaq.push(['_trackPageview']);
 			if(window.ga) ga('send', 'pageview', {'page': options.url, 'title': options.title});
-
 
 			// Set new title
 			document.title = options.title;
@@ -462,11 +468,7 @@
 		}else{
 			options = arguments[0];
 		}
-		// If PJAX isn't supported by the current browser, push user to specified page.
-		if(!internal.is_supported){
-			document.location = options.url;
-			return;	
-		} 
+
 		// Proccess options
 		options = internal.parseOptions(options);
 		// If everything went ok, activate pjax.
