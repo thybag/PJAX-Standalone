@@ -7,10 +7,16 @@
 	<script type="text/javascript" src='../pjax-standalone.js'></script> 
 	<script type='text/javascript'>
 		//PJAX links!
+
 		pjax.connect({
 			'container': 'content',
-			'beforeSend': function(){console.log("before send");},
-			'complete': function(){console.log("done!");}
+			'beforeSend': function(event){ 
+				console.log("before send");
+			},
+			'success': function(event){
+				var url = (typeof event.data !== 'undefined') ? event.data.url : '';
+				console.log("Sucessfully loaded "+ url);
+			}
 		});
 		//pjax.connect('content', 'pjaxer');
 		//pjax.connect('content');

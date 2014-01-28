@@ -1,23 +1,23 @@
 # PJAX-Standalone#
 
 A standalone implementation of push state AJAX, designed for use on non-JQuery web pages.
-The design is loosely based on the original jquery implementation found at: https://github.com/defunkt/jquery-pjax
+The design is loosely based on the original jQuery implementation found at: https://github.com/defunkt/jquery-pjax
 
-This code is licensed under the MIT Licence.
+This code is licensed under the MIT License.
 
-This code has been tested in Chrome, Firefox, Opera and IE7,8 and 9. 
-PJAX is supported in Chrome, Firefox and Opera, while in IE the fallbacks operate as expected.
+This code has been tested in Chrome, Firefox, Opera and IE7, 8, 9 and 10. 
+PJAX is supported in Chrome, Firefox, IE10+ and Opera, while in older IE versions the fall backs operate as expected.
 
 A live version of the demo can be viewed here: http://userbag.co.uk/demo/pjax/
 
 ### Usage Instructions
 
-To add pjax to your page, you will need to include the pjax-standalone.js script in to the head of your document.
+To use PJAX on your page you will need to include the pjax-standalone.js script in to the head of the page. Alternately, if the assets for your site are built (using a tool like grunt) PJAX standalone can also be installed using bower `bower install pjax-standalone`.
 
 Once done, PJAX can be setup in 3 ways. 
 
 #### Option 1
-Give all links a data-pjax attribute specifing where to place the content that gets loaded.:
+Give all links a data-pjax attribute specifying where to place the content that gets loaded.:
 
     <a href='page1.php' data-pjax='content'>Page 1</a>
 
@@ -51,12 +51,12 @@ Set all links with a specific class to use a particular container using:
 
 ### Callbacks
 
-PJAX-Standalone impliments the following callbacks 
+PJAX-Standalone implements the following callbacks 
 
-* beforeSend - Called before ajax request is made
-* complete - When ajax request has completed
-* success - When ajax request has completed successfully
-* error - When ajax request did not complet successfully (error 404/500 etc)
+* beforeSend - Called before AJAX request is made
+* complete - When AJAX request has completed
+* success - When AJAX request has completed successfully
+* error - When AJAX request did not complete successfully (error 404/500 etc)
 
 The callbacks are specified as part of the original pjax.connect method:
 
@@ -66,15 +66,19 @@ The callbacks are specified as part of the original pjax.connect method:
 		'complete': function(){console.log("done!");},
 	});
 
+The PJAX options at the time of an event being triggered can also be accessed via `event.data` within the callback.
+
 In addition to the callbacks the following options can also be provided to PJAX connect.
 
 * useClass - string - Apply PJAX only to links with the provided class.
 * parseLinksOnload - true|false - Make links in loaded pages use PJAX. Enabled by default.
 * smartLoad - true|false - Ensure returned HTML is correct. Enabled by default.
+* autoAnalytics = true|false - Enabled by default, will attempt to automatically track page views to any detected google analytics trackers.
+
 
 ### Using PJAX-Standalone programmatically
 
-You can invoke a pjax page load programmitcally by calling the pjax.invoke() method.
+You can invoke a pjax page load programmatically by calling the pjax.invoke() method.
 At minimum the pjax invoke method must be given a url and container attribute. It can also
 be provided with a title, parseLinksOnload setting and any callbacks you wish to use.
 
@@ -96,7 +100,7 @@ Update your code to return only the main content area when the X-PJAX header is 
 		//Output content with wrapper/layout
 	}
 
-If you are unable to change the backend code, or simply do not want to. So long as smartLoad is enabled (which it is by default), PJAX-Standalone will extract the container_divs content from the returned HTML and apply it to the current page meaning PJAX loading will still work as expect (although some of PJAX's performance gains may be lost).
+If you are unable to change the server side code or simply do not want to, So long as smartLoad is enabled (which it is by default), PJAX-Standalone will extract the container_divs content from the returned HTML and apply it to the current page meaning PJAX loading will still work as expect (although some of PJAX's performance gains may be lost).
 
 
 	
