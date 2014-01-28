@@ -28,10 +28,10 @@
 		var pjax_shell = {
 			"connect": function() { return; },
 			"invoke": function() {
-		 		var url = (arguments.length === 2) ? arguments[0] : arguments.url;
-		 		document.location = url;
+				var url = (arguments.length === 2) ? arguments[0] : arguments.url;
+				document.location = url;
 				return;	
-		 	} 
+			} 
 		};
 		// amd support
 		if (typeof define === 'function' && define.amd) { 
@@ -355,7 +355,7 @@
 			options.history = opt.history;
 		}else{
 			// Ensure its bool.
-			options.history = (!(options.history === false));
+			options.history = (options.history === false) ? false : true;
 		}
 
 		// Parse Links on load? Enabled by default.
