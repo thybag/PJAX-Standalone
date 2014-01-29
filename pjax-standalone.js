@@ -4,7 +4,7 @@
  * A standalone implementation of Pushstate AJAX, for non-JQuery web pages.
  * JQuery are recommended to use the original implementation at: https://github.com/defunkt/jquery-pjax
  * 
- * @version 0.5.3
+ * @version 0.5.4
  * @author Carl
  * @source https://github.com/thybag/PJAX-Standalone
  * @license MIT
@@ -50,7 +50,7 @@
 	 * @param event Event to listen for.
 	 * @param callback Method to run when event is detected.
 	 */
-	internal.addEvent = function(obj, event, callback){
+	internal.addEvent = function(obj, event, callback) {
 		obj.addEventListener(event, callback, false);
 	};
 
@@ -63,7 +63,7 @@
 	 * @param obj
 	 * @return obj
 	 */
-	internal.clone = function(obj){
+	internal.clone = function(obj) {
 		object = {};
 		// For every option in object, create it in the duplicate.
 		for (var i in obj) {
@@ -80,7 +80,7 @@
 	 * @param node. Objects to fire event on
 	 * @return event_name. type of event
 	 */
-	internal.triggerEvent = function(node, event_name, data){
+	internal.triggerEvent = function(node, event_name, data) {
 		// Good browsers
 		evt = document.createEvent("HTMLEvents");
 		evt.initEvent(event_name, true, true);
@@ -93,7 +93,7 @@
 	 * popstate listener
 	 * Listens for back/forward button events and updates page accordingly.
 	 */
-	internal.addEvent(window, 'popstate', function(st){
+	internal.addEvent(window, 'popstate', function(st) {
 		if(st.state !== null) {
 
 			var opt = {	
@@ -184,9 +184,9 @@
 		}
 
 		// For all returned nodes
-		for(var i=0,tmp_opt; i < nodes.length; i++){
+		for(var i=0,tmp_opt; i < nodes.length; i++) {
 			node = nodes[i];
-			if(typeof options.excludeClass !== 'undefined'){
+			if(typeof options.excludeClass !== 'undefined') {
 				if(node.className.indexOf(options.excludeClass) !== -1) continue;
 			}
 			// Override options history to true, else link parsing could be triggered by back button (which runs in no-history mode)
@@ -225,7 +225,7 @@
 
 		// Look through all returned divs.
 		tmpNodes = tmp.getElementsByTagName('div');
-		for(var i=0;i<tmpNodes.length;i++){
+		for(var i=0;i<tmpNodes.length;i++) {
 			if(tmpNodes[i].id === options.container.id){
 				// If our container div is within the returned HTML, we both know the returned content is
 				// not PJAX ready, but instead likely the full HTML content. in Addition we can also guess that
@@ -246,7 +246,7 @@
 	 * @param node. Dom node to add returned content in to.
 	 * @param addtohistory. Does this load require a history event.
 	 */
-	internal.handle = function(options){
+	internal.handle = function(options) {
 		
 		// Fire beforeSend Event.
 		internal.triggerEvent(options.container, 'beforeSend', options);
@@ -265,7 +265,7 @@
 				// Attempt to grab title from non-smart loaded page contents 
 				if(!options.smartLoad){
 					var tmpTitle = options.container.getElementsByTagName('title');
-					if(tmpTitle.length !== 0) options.title = tmpTitle[0].innerHTML
+					if(tmpTitle.length !== 0) options.title = tmpTitle[0].innerHTML;
 				}
 			}
 
@@ -309,7 +309,7 @@
 			document.title = options.title;
 
 			// Scroll page to top on new page load
-			if(options.returnToTop){
+			if(options.returnToTop) {
 				window.scrollTo(0, 0);
 			} 
 		});
@@ -323,27 +323,33 @@
 	 * @param location. Page to request.
 	 * @param callback. Method to call when a page is loaded.
 	 */
-	internal.request = function(location, callback){
+	internal.request = function(location, callback) {
 		// Create xmlHttpRequest object.
-		try {var xmlhttp = window.XMLHttpRequest?new XMLHttpRequest(): new ActiveXObject("Microsoft.XMLHTTP");}  catch (e) { }
-			// Add state listener.
-			xmlhttp.onreadystatechange = function(){
-				if ((xmlhttp.readyState === 4) && (xmlhttp.status === 200)) {
-					// Success, Return HTML
-					callback(xmlhttp.responseText);
-				}else if((xmlhttp.readyState === 4) && (xmlhttp.status === 404 || xmlhttp.status === 500)){
-					// error (return false)
-					callback(false);
-				}
-			};
-			// Secret pjax ?get param so browser doesn't return pjax content from cache when we don't want it to
-			// Switch between ? and & so as not to break any URL params (Based on change by zmasek https://github.com/zmasek/)
-			xmlhttp.open("GET", location + ((!/[?&]/.test(location)) ? '?_pjax' : '&_pjax'), true);
-			// Add headers so things can tell the request is being performed via AJAX.
-			xmlhttp.setRequestHeader('X-PJAX', 'true'); // PJAX header
-			xmlhttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest');// Standard AJAX header.
+		var xmlhttp;
+		try { 
+			xmlhttp = window.XMLHttpRequest? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP"); 
+		}  catch (e) { 
+			console.log("Unable to create XMLHTTP Request");
+			return; 
+		}
+		// Add state listener.
+		xmlhttp.onreadystatechange = function() {
+			if ((xmlhttp.readyState === 4) && (xmlhttp.status === 200)) {
+				// Success, Return HTML
+				callback(xmlhttp.responseText);
+			}else if((xmlhttp.readyState === 4) && (xmlhttp.status === 404 || xmlhttp.status === 500)){
+				// error (return false)
+				callback(false);
+			}
+		};
+		// Secret pjax ?get param so browser doesn't return pjax content from cache when we don't want it to
+		// Switch between ? and & so as not to break any URL params (Based on change by zmasek https://github.com/zmasek/)
+		xmlhttp.open("GET", location + ((!/[?&]/.test(location)) ? '?_pjax' : '&_pjax'), true);
+		// Add headers so things can tell the request is being performed via AJAX.
+		xmlhttp.setRequestHeader('X-PJAX', 'true'); // PJAX header
+		xmlhttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest');// Standard AJAX header.
 
-			xmlhttp.send(null);
+		xmlhttp.send(null);
 	};
 
 	/**
@@ -354,7 +360,7 @@
 	 * @param options
 	 * @return false | valid options object
 	 */
-	internal.parseOptions = function(options){
+	internal.parseOptions = function(options) {
 
 		/**  Defaults parse options. (if something isn't provided)
 		 *
@@ -412,16 +418,16 @@
 	 * @param container - (string) container ID | container DOM node.
 	 * @return container DOM node | false
 	 */
-	internal.get_container_node = function(container){
+	internal.get_container_node = function(container) {
 		if(typeof container === 'string') {
-			var container = document.getElementById(container);
+			container = document.getElementById(container);
 			if(container === null){
 				console.log("Could not find container with id:" + container);
 				return false;
 			}
 		}
 		return container;
-	}
+	};
 
 	/**
 	 * connect
@@ -445,7 +451,7 @@
 	 *					})
 	 *		Will use the provided JSON to configure the script in full (including callbacks)
 	 */
-	this.connect = function(/* options */){
+	this.connect = function(/* options */) {
 		// connect();
 		var options = {};
 		// connect(container, class_to_apply_to)
@@ -487,7 +493,7 @@
 	 * @scope public
 	 * @param options  
 	 */
-	this.invoke = function(/* options */){
+	this.invoke = function(/* options */) {
 		// url, container
 		if(arguments.length === 2){
 			options = {};
