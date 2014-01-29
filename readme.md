@@ -67,6 +67,7 @@ PJAX-Standalone implements the following callbacks/events:
 * complete - When AJAX request has completed
 * success - When AJAX request has completed successfully
 * error - When AJAX request did not complete successfully (error 404/500 etc)
+* ready - Fired when PJAX completes initial link parsing
 
 The callbacks can be specified either as part of the original pjax.connect method:
 
