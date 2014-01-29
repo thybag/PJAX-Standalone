@@ -4,7 +4,7 @@
  * A standalone implementation of Pushstate AJAX, for non-JQuery web pages.
  * JQuery are recommended to use the original implementation at: https://github.com/defunkt/jquery-pjax
  * 
- * @version 0.5.3
+ * @version 0.5.4
  * @author Carl
  * @source https://github.com/thybag/PJAX-Standalone
  * @license MIT
@@ -13,7 +13,7 @@
 
 	// Object to store private values/methods.
 	var internal = {
-		// Is this the first usage of pjax? (Ensure history entry has required values if so.)
+		// Is this the first usage of PJAX? (Ensure history entry has required values if so.)
 		"firstrun": true,
 		// Borrowed wholesale from https://github.com/defunkt/jquery-pjax
 		// Attempt to check that a device supports pushstate before attempting to use it.
@@ -21,10 +21,10 @@
 	};
 	
 	// If PJAX isn't supported we can skip setting up the library all together
-	// So as not to break any code expecting pjax to be there, return a shell object containing
+	// So as not to break any code expecting PJAX to be there, return a shell object containing
 	// IE7 + compatible versions of connect (which needs to do nothing) and invoke ( which just changes the page)
 	if(!internal.is_supported) {
-		// Pjax shell, so any code expecting pjax will work
+		// PJAX shell, so any code expecting PJAX will work
 		var pjax_shell = {
 			"connect": function() { return; },
 			"invoke": function() {
@@ -33,7 +33,7 @@
 				return;	
 			} 
 		};
-		// amd support
+		// AMD support
 		if (typeof define === 'function' && define.amd) { 
 			define( function() { return pjax_shell; }); 
 		} else { 
@@ -50,7 +50,7 @@
 	 * @param event Event to listen for.
 	 * @param callback Method to run when event is detected.
 	 */
-	internal.addEvent = function(obj, event, callback){
+	internal.addEvent = function(obj, event, callback) {
 		obj.addEventListener(event, callback, false);
 	};
 
@@ -63,7 +63,7 @@
 	 * @param obj
 	 * @return obj
 	 */
-	internal.clone = function(obj){
+	internal.clone = function(obj) {
 		object = {};
 		// For every option in object, create it in the duplicate.
 		for (var i in obj) {
@@ -80,11 +80,12 @@
 	 * @param node. Objects to fire event on
 	 * @return event_name. type of event
 	 */
-	internal.triggerEvent = function(node, event_name, data){
+	internal.triggerEvent = function(node, event_name, data) {
 		// Good browsers
 		evt = document.createEvent("HTMLEvents");
 		evt.initEvent(event_name, true, true);
-		evt.data = data;
+		// If additional data was provided, add it to event
+		if(typeof data !== 'undefined') evt.data = data;
 		node.dispatchEvent(evt);
 	};
 
@@ -92,12 +93,13 @@
 	 * popstate listener
 	 * Listens for back/forward button events and updates page accordingly.
 	 */
-	internal.addEvent(window, 'popstate', function(st){
+	internal.addEvent(window, 'popstate', function(st) {
 		if(st.state !== null) {
 
 			var opt = {	
 				'url': st.state.url, 
 				'container': st.state.container, 
+				'title' : st.state.title,
 				'history': false
 			};
 
@@ -108,7 +110,7 @@
 				}
 			}
 
-			// Convert state data to pjax options
+			// Convert state data to PJAX options
 			var options = internal.parseOptions(opt);
 			// If something went wrong, return.
 			if(options === false) return;
@@ -119,7 +121,7 @@
 
 	/**
 	 * attach
-	 * Attach pjax listeners to a link.
+	 * Attach PJAX listeners to a link.
 	 * @scope private
 	 * @param link_node. link that will be clicked.
 	 * @param content_node. 
@@ -137,9 +139,9 @@
 			return true;
 		}
 
-		// Add link href to object
+		// Add link HREF to object
 		options.url = node.href;
-		// If pjax data is specified, use as container
+		// If PJAX data is specified, use as container
 		if(node.getAttribute('data-pjax')) {
 			options.container = node.getAttribute('data-pjax');
 		}
@@ -155,7 +157,7 @@
 		internal.addEvent(node, 'click', function(event) {
 			// Allow middle click (pages in new windows)
 			if ( event.which > 1 || event.metaKey || event.ctrlKey ) return;
-			// Dont fire normal event
+			// Don't fire normal event
 			if(event.preventDefault){ event.preventDefault(); }else{ event.returnValue = false; }
 			// Take no action if we are already on said page?
 			if(document.location.href === options.url) return false;
@@ -172,21 +174,30 @@
 	 * @param options. Valid Options object.
 	 */
 	internal.parseLinks = function(dom_obj, options) {
-		if(typeof options.useClass != 'undefined'){
+
+		if(typeof options.useClass !== 'undefined'){
 			// Get all nodes with the provided class name.
 			nodes = dom_obj.getElementsByClassName(options.useClass);
 		}else{
 			// If no class was provided, just get all the links
 			nodes = dom_obj.getElementsByTagName('a');
 		}
+
 		// For all returned nodes
-		for(var i=0,tmp_opt; i < nodes.length; i++){
+		for(var i=0,tmp_opt; i < nodes.length; i++) {
 			node = nodes[i];
+			if(typeof options.excludeClass !== 'undefined') {
+				if(node.className.indexOf(options.excludeClass) !== -1) continue;
+			}
 			// Override options history to true, else link parsing could be triggered by back button (which runs in no-history mode)
 			tmp_opt = internal.clone(options);
 			tmp_opt.history = true;
 			internal.attach(node, tmp_opt);
 		}
+
+		// Fire ready event once all links are connected
+		if(internal.firstrun)
+			internal.triggerEvent(internal.get_container_node(options.container), 'ready');
 	};
 
 	/**
@@ -214,7 +225,7 @@
 
 		// Look through all returned divs.
 		tmpNodes = tmp.getElementsByTagName('div');
-		for(var i=0;i<tmpNodes.length;i++){
+		for(var i=0;i<tmpNodes.length;i++) {
 			if(tmpNodes[i].id === options.container.id){
 				// If our container div is within the returned HTML, we both know the returned content is
 				// not PJAX ready, but instead likely the full HTML content. in Addition we can also guess that
@@ -229,13 +240,13 @@
 
 	/**
 	 * handle
-	 * Handle requests to load content via pjax.
+	 * Handle requests to load content via PJAX.
 	 * @scope private
 	 * @param url. Page to load.
 	 * @param node. Dom node to add returned content in to.
 	 * @param addtohistory. Does this load require a history event.
 	 */
-	internal.handle = function(options){
+	internal.handle = function(options) {
 		
 		// Fire beforeSend Event.
 		internal.triggerEvent(options.container, 'beforeSend', options);
@@ -248,11 +259,13 @@
 
 			// If no title was provided
 			if(typeof options.title === 'undefined'){
-				// Attempt to grab title from page contents.
-				if(options.container.getElementsByTagName('title').length !== 0){
-					options.title = options.container.getElementsByTagName('title')[0].innerHTML;
-				}else{
-					options.title = document.title;
+				// Use current doc title (this will be updated via smartload if its enabled)
+				options.title = document.title;
+
+				// Attempt to grab title from non-smart loaded page contents 
+				if(!options.smartLoad){
+					var tmpTitle = options.container.getElementsByTagName('title');
+					if(tmpTitle.length !== 0) options.title = tmpTitle[0].innerHTML;
 				}
 			}
 
@@ -263,11 +276,11 @@
 			if(options.history) {
 				// If this is the first time pjax has run, create a state object for the current page.
 				if(internal.firstrun){
-					window.history.replaceState({'url': document.location.href, 'container':  options.container.id}, document.title);
+					window.history.replaceState({'url': document.location.href, 'container':  options.container.id, 'title': document.title}, document.title);
 					internal.firstrun = false;
 				}
 				// Update browser history
-				window.history.pushState({'url': options.url, 'container': options.container.id }, options.title , options.url);
+				window.history.pushState({'url': options.url, 'container': options.container.id, 'title': options.title }, options.title , options.url);
 			}
 
 			// Initialize any new links found within document (if enabled).
@@ -291,8 +304,14 @@
 				if(window._gaq) _gaq.push(['_trackPageview']);
 				if(window.ga) ga('send', 'pageview', {'page': options.url, 'title': options.title});
 			}
+
 			// Set new title
 			document.title = options.title;
+
+			// Scroll page to top on new page load
+			if(options.returnToTop) {
+				window.scrollTo(0, 0);
+			} 
 		});
 	};
 
@@ -304,27 +323,33 @@
 	 * @param location. Page to request.
 	 * @param callback. Method to call when a page is loaded.
 	 */
-	internal.request = function(location, callback){
+	internal.request = function(location, callback) {
 		// Create xmlHttpRequest object.
-		try {xmlhttp = window.XMLHttpRequest?new XMLHttpRequest(): new ActiveXObject("Microsoft.XMLHTTP");}  catch (e) { }
-			// Add state listener.
-			xmlhttp.onreadystatechange = function(){
-				if ((xmlhttp.readyState === 4) && (xmlhttp.status === 200)) {
-					// Success, Return HTML
-					callback(xmlhttp.responseText);
-				}else if((xmlhttp.readyState === 4) && (xmlhttp.status === 404 || xmlhttp.status === 500)){
-					// error (return false)
-					callback(false);
-				}
-			};
-			// Secret pjax ?get param so browser doesn't return pjax content from cache when we don't want it to
-			// Switch between ? and & so as not to break any URL params (Based on change by zmasek https://github.com/zmasek/)
-			xmlhttp.open("GET", location + ((!/[?&]/.test(location)) ? '?_pjax' : '&_pjax'), true);
-			// Add headers so things can tell the request is being performed via AJAX.
-			xmlhttp.setRequestHeader('X-PJAX', 'true'); // PJAX header
-			xmlhttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest');// Standard AJAX header.
+		var xmlhttp;
+		try { 
+			xmlhttp = window.XMLHttpRequest? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP"); 
+		}  catch (e) { 
+			console.log("Unable to create XMLHTTP Request");
+			return; 
+		}
+		// Add state listener.
+		xmlhttp.onreadystatechange = function() {
+			if ((xmlhttp.readyState === 4) && (xmlhttp.status === 200)) {
+				// Success, Return HTML
+				callback(xmlhttp.responseText);
+			}else if((xmlhttp.readyState === 4) && (xmlhttp.status === 404 || xmlhttp.status === 500)){
+				// error (return false)
+				callback(false);
+			}
+		};
+		// Secret pjax ?get param so browser doesn't return pjax content from cache when we don't want it to
+		// Switch between ? and & so as not to break any URL params (Based on change by zmasek https://github.com/zmasek/)
+		xmlhttp.open("GET", location + ((!/[?&]/.test(location)) ? '?_pjax' : '&_pjax'), true);
+		// Add headers so things can tell the request is being performed via AJAX.
+		xmlhttp.setRequestHeader('X-PJAX', 'true'); // PJAX header
+		xmlhttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest');// Standard AJAX header.
 
-			xmlhttp.send(null);
+		xmlhttp.send(null);
 	};
 
 	/**
@@ -335,73 +360,73 @@
 	 * @param options
 	 * @return false | valid options object
 	 */
-	internal.parseOptions = function(options){
-		// Defaults. (if something isn't provided)
-		opt = {};
-		opt.history = true;
-		opt.parseLinksOnload = true;
-		opt.smartLoad = true;
-		opt.autoAnalytics = true;
+	internal.parseOptions = function(options) {
 
-		// Ensure a url and container have been provided.
-		if(typeof options.url === 'undefined' || typeof options.container === 'undefined'){
+		/**  Defaults parse options. (if something isn't provided)
+		 *
+		 * - history: track event to history (on by default, set to off when performing back operation)
+		 * - parseLinksOnload: Enabled by default. Process pages loaded via PJAX and setup PJAX on any links found.
+		 * - smartLoad: Tries to ensure the correct HTML is loaded. If you are certain your back end 
+		 *		will only return PJAX ready content this can be disabled for a slight performance boost.
+		 * - autoAnalytics: Automatically attempt to log events to google analytics (if tracker is available)
+		 * - returnToTop: Scroll user back to top of page, when new page is opened by PJAX
+		 */
+		var defaults = {
+			"history": true,
+			"parseLinksOnload": true,
+			"smartLoad" : true,
+			"autoAnalytics": true,
+			"returnToTop": true
+		};
+
+		// Ensure a URL and container have been provided.
+		if(typeof options.url === 'undefined' || typeof options.container === 'undefined' || options.container === null) {
 			console.log("URL and Container must be provided.");
 			return false;
 		}
 
-		// Find out if history has been provided
-		if(typeof options.history === 'undefined'){
-			// use default
-			options.history = opt.history;
-		}else{
-			// Ensure its bool.
-			options.history = (options.history === false) ? false : true;
+		// Check required options are defined, if not, use default
+		for(var o in defaults) {
+			if(typeof options[o] === 'undefined') options[o] = defaults[o];
 		}
 
-		// Parse Links on load? Enabled by default.
-		// (Process pages loaded via PJAX and setup PJAX on any links found.)
-		if(typeof options.parseLinksOnload === 'undefined'){
-			options.parseLinksOnload = opt.parseLinksOnload;
-		}
+		// Ensure history setting is a boolean.
+		options.history = (options.history === false) ? false : true;
 
-		// Smart load (enabled by default.) Tries to ensure the correct HTML is loaded.
-		// If you are certain your back end will only return PJAX ready content this can be disabled
-		// for a slight performance boost.
-		if(typeof options.smartLoad === 'undefined'){
-			options.smartLoad = opt.smartLoad;
-		}
+		// Get container (if its an id, convert it to a DOM node.)
+		options.container = internal.get_container_node(options.container);
 
-		// Automatically attempt to log events to google analytics (if tracker is available)
-		// set autoAnalytics to false to disable
-		if(typeof options.autoAnalytics === 'undefined'){
-			options.autoAnalytics = opt.autoAnalytics;
-		}
+		// Events
+		var events = ['ready', 'beforeSend', 'complete', 'error', 'success'];
 
-		// Get container (if its an id, convert it to a dom node.)
-		if(typeof options.container === 'string' ) {
-			container = document.getElementById(options.container);
-			if(container === null){
-				console.log("Could not find container with id:"+options.container);
-				return false;
+		// If everything went okay thus far, connect up listeners
+		for(var e in events){
+			var evt = events[e];
+			if(typeof options[evt] === 'function'){
+				internal.addEvent(options.container, evt, options[evt]);
 			}
-			options.container = container;
 		}
 
-		// If everything went ok thus far, connect up listeners
-		if(typeof options.beforeSend === 'function'){
-			internal.addEvent(options.container, 'beforeSend', options.beforeSend);
-		}
-		if(typeof options.complete === 'function'){
-			internal.addEvent(options.container, 'complete', options.complete);
-		}
-		if(typeof options.error === 'function'){
-			internal.addEvent(options.container, 'error', options.error);
-		}
-		if(typeof options.success === 'function'){
-			internal.addEvent(options.container, 'success', options.success);
-		}
 		// Return valid options
 		return options;
+	};
+
+	/**
+	 * get_container_node
+	 * Returns container node
+	 *
+	 * @param container - (string) container ID | container DOM node.
+	 * @return container DOM node | false
+	 */
+	internal.get_container_node = function(container) {
+		if(typeof container === 'string') {
+			container = document.getElementById(container);
+			if(container === null){
+				console.log("Could not find container with id:" + container);
+				return false;
+			}
+		}
+		return container;
 	};
 
 	/**
@@ -424,9 +449,9 @@
 	 *						'container':'somecontainer',
 	 *						'beforeSend': function(){console.log("sending");}
 	 *					})
-	 *		Will use the provided json to configure the script in full (including callbacks)
+	 *		Will use the provided JSON to configure the script in full (including callbacks)
 	 */
-	this.connect = function(/* options */){
+	this.connect = function(/* options */) {
 		// connect();
 		var options = {};
 		// connect(container, class_to_apply_to)
@@ -434,7 +459,7 @@
 			options.container = arguments[0];
 			options.useClass = arguments[1];
 		}
-		// Either json or container id
+		// Either JSON or container id
 		if(arguments.length === 1){
 			if(typeof arguments[0] === 'string' ) {
 				//connect(container_id)
@@ -452,7 +477,7 @@
 		if(document.readyState === 'complete') {
 			internal.parseLinks(document, options);
 		} else {
-			//Dont run until the window is ready.
+			//Don't run until the window is ready.
 			internal.addEvent(window, 'load', function(){	
 				//Parse links using specified options
 				internal.parseLinks(document, options);
@@ -468,7 +493,7 @@
 	 * @scope public
 	 * @param options  
 	 */
-	this.invoke = function(/* options */){
+	this.invoke = function(/* options */) {
 		// url, container
 		if(arguments.length === 2){
 			options = {};
