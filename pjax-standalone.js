@@ -173,7 +173,7 @@
 	 * @param options. Valid Options object.
 	 */
 	internal.parseLinks = function(dom_obj, options) {
-		if(typeof options.useClass != 'undefined'){
+		if(typeof options.useClass !== 'undefined'){
 			// Get all nodes with the provided class name.
 			nodes = dom_obj.getElementsByClassName(options.useClass);
 		}else{
@@ -183,6 +183,9 @@
 		// For all returned nodes
 		for(var i=0,tmp_opt; i < nodes.length; i++){
 			node = nodes[i];
+			if(typeof options.excludeClass !== 'undefined'){
+				if(node.className.indexOf(options.excludeClass) !== -1) continue;
+			}
 			// Override options history to true, else link parsing could be triggered by back button (which runs in no-history mode)
 			tmp_opt = internal.clone(options);
 			tmp_opt.history = true;
@@ -315,7 +318,7 @@
 	 */
 	internal.request = function(location, callback){
 		// Create xmlHttpRequest object.
-		try {xmlhttp = window.XMLHttpRequest?new XMLHttpRequest(): new ActiveXObject("Microsoft.XMLHTTP");}  catch (e) { }
+		try {var xmlhttp = window.XMLHttpRequest?new XMLHttpRequest(): new ActiveXObject("Microsoft.XMLHTTP");}  catch (e) { }
 			// Add state listener.
 			xmlhttp.onreadystatechange = function(){
 				if ((xmlhttp.readyState === 4) && (xmlhttp.status === 200)) {
@@ -422,7 +425,7 @@
 	 *						'container':'somecontainer',
 	 *						'beforeSend': function(){console.log("sending");}
 	 *					})
-	 *		Will use the provided json to configure the script in full (including callbacks)
+	 *		Will use the provided JSON to configure the script in full (including callbacks)
 	 */
 	this.connect = function(/* options */){
 		// connect();
@@ -432,7 +435,7 @@
 			options.container = arguments[0];
 			options.useClass = arguments[1];
 		}
-		// Either json or container id
+		// Either JSON or container id
 		if(arguments.length === 1){
 			if(typeof arguments[0] === 'string' ) {
 				//connect(container_id)
@@ -450,7 +453,7 @@
 		if(document.readyState === 'complete') {
 			internal.parseLinks(document, options);
 		} else {
-			//Dont run until the window is ready.
+			//Don't run until the window is ready.
 			internal.addEvent(window, 'load', function(){	
 				//Parse links using specified options
 				internal.parseLinks(document, options);
