@@ -13,7 +13,7 @@
 
 	// Object to store private values/methods.
 	var internal = {
-		// Is this the first usage of pjax? (Ensure history entry has required values if so.)
+		// Is this the first usage of PJAX? (Ensure history entry has required values if so.)
 		"firstrun": true,
 		// Borrowed wholesale from https://github.com/defunkt/jquery-pjax
 		// Attempt to check that a device supports pushstate before attempting to use it.
@@ -21,10 +21,10 @@
 	};
 	
 	// If PJAX isn't supported we can skip setting up the library all together
-	// So as not to break any code expecting pjax to be there, return a shell object containing
+	// So as not to break any code expecting PJAX to be there, return a shell object containing
 	// IE7 + compatible versions of connect (which needs to do nothing) and invoke ( which just changes the page)
 	if(!internal.is_supported) {
-		// Pjax shell, so any code expecting pjax will work
+		// PJAX shell, so any code expecting PJAX will work
 		var pjax_shell = {
 			"connect": function() { return; },
 			"invoke": function() {
@@ -33,7 +33,7 @@
 				return;	
 			} 
 		};
-		// amd support
+		// AMD support
 		if (typeof define === 'function' && define.amd) { 
 			define( function() { return pjax_shell; }); 
 		} else { 
@@ -84,7 +84,8 @@
 		// Good browsers
 		evt = document.createEvent("HTMLEvents");
 		evt.initEvent(event_name, true, true);
-		evt.data = data;
+		// If additional data was provided, add it to event
+		if(typeof data !== 'undefined') evt.data = data;
 		node.dispatchEvent(evt);
 	};
 
@@ -120,7 +121,7 @@
 
 	/**
 	 * attach
-	 * Attach pjax listeners to a link.
+	 * Attach PJAX listeners to a link.
 	 * @scope private
 	 * @param link_node. link that will be clicked.
 	 * @param content_node. 
@@ -138,9 +139,9 @@
 			return true;
 		}
 
-		// Add link href to object
+		// Add link HREF to object
 		options.url = node.href;
-		// If pjax data is specified, use as container
+		// If PJAX data is specified, use as container
 		if(node.getAttribute('data-pjax')) {
 			options.container = node.getAttribute('data-pjax');
 		}
@@ -173,6 +174,7 @@
 	 * @param options. Valid Options object.
 	 */
 	internal.parseLinks = function(dom_obj, options) {
+
 		if(typeof options.useClass !== 'undefined'){
 			// Get all nodes with the provided class name.
 			nodes = dom_obj.getElementsByClassName(options.useClass);
@@ -180,6 +182,7 @@
 			// If no class was provided, just get all the links
 			nodes = dom_obj.getElementsByTagName('a');
 		}
+
 		// For all returned nodes
 		for(var i=0,tmp_opt; i < nodes.length; i++){
 			node = nodes[i];
@@ -191,6 +194,10 @@
 			tmp_opt.history = true;
 			internal.attach(node, tmp_opt);
 		}
+
+		// Fire ready event once all links are connected
+		if(internal.firstrun)
+			internal.triggerEvent(internal.get_container_node(options.container), 'ready');
 	};
 
 	/**
@@ -233,7 +240,7 @@
 
 	/**
 	 * handle
-	 * Handle requests to load content via pjax.
+	 * Handle requests to load content via PJAX.
 	 * @scope private
 	 * @param url. Page to load.
 	 * @param node. Dom node to add returned content in to.
@@ -381,17 +388,10 @@
 		options.history = (options.history === false) ? false : true;
 
 		// Get container (if its an id, convert it to a DOM node.)
-		if(typeof options.container === 'string') {
-			var container = document.getElementById(options.container);
-			if(container === null){
-				console.log("Could not find container with id:"+options.container);
-				return false;
-			}
-			options.container = container;
-		}
+		options.container = internal.get_container_node(options.container);
 
 		// Events
-		var events = ['beforeSend', 'complete', 'error', 'success'];
+		var events = ['ready', 'beforeSend', 'complete', 'error', 'success'];
 
 		// If everything went okay thus far, connect up listeners
 		for(var e in events){
@@ -404,6 +404,24 @@
 		// Return valid options
 		return options;
 	};
+
+	/**
+	 * get_container_node
+	 * Returns container node
+	 *
+	 * @param container - (string) container ID | container DOM node.
+	 * @return container DOM node | false
+	 */
+	internal.get_container_node = function(container){
+		if(typeof container === 'string') {
+			var container = document.getElementById(container);
+			if(container === null){
+				console.log("Could not find container with id:" + container);
+				return false;
+			}
+		}
+		return container;
+	}
 
 	/**
 	 * connect
