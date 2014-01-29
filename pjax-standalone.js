@@ -98,6 +98,7 @@
 			var opt = {	
 				'url': st.state.url, 
 				'container': st.state.container, 
+				'title' : st.state.title,
 				'history': false
 			};
 
@@ -108,7 +109,7 @@
 				}
 			}
 
-			// Convert state data to pjax options
+			// Convert state data to PJAX options
 			var options = internal.parseOptions(opt);
 			// If something went wrong, return.
 			if(options === false) return;
@@ -155,7 +156,7 @@
 		internal.addEvent(node, 'click', function(event) {
 			// Allow middle click (pages in new windows)
 			if ( event.which > 1 || event.metaKey || event.ctrlKey ) return;
-			// Dont fire normal event
+			// Don't fire normal event
 			if(event.preventDefault){ event.preventDefault(); }else{ event.returnValue = false; }
 			// Take no action if we are already on said page?
 			if(document.location.href === options.url) return false;
@@ -248,11 +249,13 @@
 
 			// If no title was provided
 			if(typeof options.title === 'undefined'){
-				// Attempt to grab title from page contents.
-				if(options.container.getElementsByTagName('title').length !== 0){
-					options.title = options.container.getElementsByTagName('title')[0].innerHTML;
-				}else{
-					options.title = document.title;
+				// Use current doc title (this will be updated via smartload if its enabled)
+				options.title = document.title;
+
+				// Attempt to grab title from non-smart loaded page contents 
+				if(!options.smartLoad){
+					var tmpTitle = options.container.getElementsByTagName('title');
+					if(tmpTitle.length !== 0) options.title = tmpTitle[0].innerHTML
 				}
 			}
 
@@ -263,11 +266,11 @@
 			if(options.history) {
 				// If this is the first time pjax has run, create a state object for the current page.
 				if(internal.firstrun){
-					window.history.replaceState({'url': document.location.href, 'container':  options.container.id}, document.title);
+					window.history.replaceState({'url': document.location.href, 'container':  options.container.id, 'title': document.title}, document.title);
 					internal.firstrun = false;
 				}
 				// Update browser history
-				window.history.pushState({'url': options.url, 'container': options.container.id }, options.title , options.url);
+				window.history.pushState({'url': options.url, 'container': options.container.id, 'title': options.title }, options.title , options.url);
 			}
 
 			// Initialize any new links found within document (if enabled).
@@ -291,8 +294,14 @@
 				if(window._gaq) _gaq.push(['_trackPageview']);
 				if(window.ga) ga('send', 'pageview', {'page': options.url, 'title': options.title});
 			}
+
 			// Set new title
 			document.title = options.title;
+
+			// Scroll page to top on new page load
+			if(options.returnToTop){
+				window.scrollTo(0, 0);
+			} 
 		});
 	};
 
@@ -344,12 +353,14 @@
 		 * - smartLoad: Tries to ensure the correct HTML is loaded. If you are certain your back end 
 		 *		will only return PJAX ready content this can be disabled for a slight performance boost.
 		 * - autoAnalytics: Automatically attempt to log events to google analytics (if tracker is available)
+		 * - returnToTop: Scroll user back to top of page, when new page is opened by PJAX
 		 */
 		var defaults = {
 			"history": true,
 			"parseLinksOnload": true,
 			"smartLoad" : true,
-			"autoAnalytics": true
+			"autoAnalytics": true,
+			"returnToTop": true
 		};
 
 		// Ensure a URL and container have been provided.
