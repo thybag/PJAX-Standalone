@@ -336,50 +336,39 @@
 	 * @return false | valid options object
 	 */
 	internal.parseOptions = function(options){
-		// Defaults. (if something isn't provided)
-		opt = {};
-		opt.history = true;
-		opt.parseLinksOnload = true;
-		opt.smartLoad = true;
-		opt.autoAnalytics = true;
 
-		// Ensure a url and container have been provided.
-		if(typeof options.url === 'undefined' || typeof options.container === 'undefined'){
+		/**  Defaults parse options. (if something isn't provided)
+		 *
+		 * - history: track event to history (on by default, set to off when performing back operation)
+		 * - parseLinksOnload: Enabled by default. Process pages loaded via PJAX and setup PJAX on any links found.
+		 * - smartLoad: Tries to ensure the correct HTML is loaded. If you are certain your back end 
+		 *		will only return PJAX ready content this can be disabled for a slight performance boost.
+		 * - autoAnalytics: Automatically attempt to log events to google analytics (if tracker is available)
+		 */
+		var defaults = {
+			"history": true,
+			"parseLinksOnload": true,
+			"smartLoad" : true,
+			"autoAnalytics": true
+		};
+
+		// Ensure a URL and container have been provided.
+		if(typeof options.url === 'undefined' || typeof options.container === 'undefined' || options.container === null) {
 			console.log("URL and Container must be provided.");
 			return false;
 		}
 
-		// Find out if history has been provided
-		if(typeof options.history === 'undefined'){
-			// use default
-			options.history = opt.history;
-		}else{
-			// Ensure its bool.
-			options.history = (options.history === false) ? false : true;
+		// Check required options are defined, if not, use default
+		for(var o in defaults) {
+			if(typeof options[o] === 'undefined') options[o] = defaults[o];
 		}
 
-		// Parse Links on load? Enabled by default.
-		// (Process pages loaded via PJAX and setup PJAX on any links found.)
-		if(typeof options.parseLinksOnload === 'undefined'){
-			options.parseLinksOnload = opt.parseLinksOnload;
-		}
+		// Ensure history setting is a boolean.
+		options.history = (options.history === false) ? false : true;
 
-		// Smart load (enabled by default.) Tries to ensure the correct HTML is loaded.
-		// If you are certain your back end will only return PJAX ready content this can be disabled
-		// for a slight performance boost.
-		if(typeof options.smartLoad === 'undefined'){
-			options.smartLoad = opt.smartLoad;
-		}
-
-		// Automatically attempt to log events to google analytics (if tracker is available)
-		// set autoAnalytics to false to disable
-		if(typeof options.autoAnalytics === 'undefined'){
-			options.autoAnalytics = opt.autoAnalytics;
-		}
-
-		// Get container (if its an id, convert it to a dom node.)
-		if(typeof options.container === 'string' ) {
-			container = document.getElementById(options.container);
+		// Get container (if its an id, convert it to a DOM node.)
+		if(typeof options.container === 'string') {
+			var container = document.getElementById(options.container);
 			if(container === null){
 				console.log("Could not find container with id:"+options.container);
 				return false;
@@ -387,19 +376,17 @@
 			options.container = container;
 		}
 
-		// If everything went ok thus far, connect up listeners
-		if(typeof options.beforeSend === 'function'){
-			internal.addEvent(options.container, 'beforeSend', options.beforeSend);
+		// Events
+		var events = ['beforeSend', 'complete', 'error', 'success'];
+
+		// If everything went okay thus far, connect up listeners
+		for(var e in events){
+			var evt = events[e];
+			if(typeof options[evt] === 'function'){
+				internal.addEvent(options.container, evt, options[evt]);
+			}
 		}
-		if(typeof options.complete === 'function'){
-			internal.addEvent(options.container, 'complete', options.complete);
-		}
-		if(typeof options.error === 'function'){
-			internal.addEvent(options.container, 'error', options.error);
-		}
-		if(typeof options.success === 'function'){
-			internal.addEvent(options.container, 'success', options.success);
-		}
+
 		// Return valid options
 		return options;
 	};
