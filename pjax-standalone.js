@@ -64,7 +64,7 @@
 	 * @return obj
 	 */
 	internal.clone = function(obj) {
-		object = {};
+		var object = {};
 		// For every option in object, create it in the duplicate.
 		for (var i in obj) {
 			object[i] = obj[i];
@@ -82,7 +82,7 @@
 	 */
 	internal.triggerEvent = function(node, event_name, data) {
 		// Good browsers
-		evt = document.createEvent("HTMLEvents");
+		var evt = document.createEvent("HTMLEvents");
 		evt.initEvent(event_name, true, true);
 		// If additional data was provided, add it to event
 		if(typeof data !== 'undefined') evt.data = data;
@@ -175,6 +175,8 @@
 	 */
 	internal.parseLinks = function(dom_obj, options) {
 
+		var nodes;
+
 		if(typeof options.useClass !== 'undefined'){
 			// Get all nodes with the provided class name.
 			nodes = dom_obj.getElementsByClassName(options.useClass);
@@ -185,7 +187,7 @@
 
 		// For all returned nodes
 		for(var i=0,tmp_opt; i < nodes.length; i++) {
-			node = nodes[i];
+			var node = nodes[i];
 			if(typeof options.excludeClass !== 'undefined') {
 				if(node.className.indexOf(options.excludeClass) !== -1) continue;
 			}
@@ -224,7 +226,7 @@
 			document.title = title;
 
 		// Look through all returned divs.
-		tmpNodes = tmp.getElementsByTagName('div');
+		var tmpNodes = tmp.getElementsByTagName('div');
 		for(var i=0;i<tmpNodes.length;i++) {
 			if(tmpNodes[i].id === options.container.id){
 				// If our container div is within the returned HTML, we both know the returned content is
@@ -496,9 +498,10 @@
 	 * @param options  
 	 */
 	this.invoke = function(/* options */) {
+
+		var options = {};
 		// url, container
 		if(arguments.length === 2){
-			options = {};
 			options.url = arguments[0];
 			options.container = arguments[1];
 		}else{
