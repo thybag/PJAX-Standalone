@@ -4,7 +4,7 @@
  * A standalone implementation of Pushstate AJAX, for non-jQuery web pages.
  * jQuery are recommended to use the original implementation at: http://github.com/defunkt/jquery-pjax
  * 
- * @version 0.5.4
+ * @version 0.6.0
  * @author Carl
  * @source https://github.com/thybag/PJAX-Standalone
  * @license MIT
