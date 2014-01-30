@@ -1,8 +1,8 @@
 /**
  * PJAX- Standalone
  *
- * A standalone implementation of Pushstate AJAX, for non-JQuery web pages.
- * JQuery are recommended to use the original implementation at: https://github.com/defunkt/jquery-pjax
+ * A standalone implementation of Pushstate AJAX, for non-jQuery web pages.
+ * jQuery are recommended to use the original implementation at: http://github.com/defunkt/jquery-pjax
  * 
  * @version 0.5.4
  * @author Carl
@@ -254,12 +254,19 @@
 		// Do the request
 		internal.request(options.url, function(html) {
 
+			// Fail if unable to load HTML via AJAX
+			if(html === false){
+				internal.triggerEvent(options.container,'complete', options);
+				internal.triggerEvent(options.container,'error', options);
+				return;
+			}
+
 			// Ensure we have the correct HTML to apply to our container.
 			if(options.smartLoad) html = internal.smartLoad(html, options);
 
 			// If no title was provided
 			if(typeof options.title === 'undefined'){
-				// Use current doc title (this will be updated via smartload if its enabled)
+				// Use current doc title (this will be updated via smart load if its enabled)
 				options.title = document.title;
 
 				// Attempt to grab title from non-smart loaded page contents 
@@ -290,13 +297,8 @@
 
 			// Fire Events
 			internal.triggerEvent(options.container,'complete', options);
-			if(html === false) { //Something went wrong
-				internal.triggerEvent(options.container,'error', options);
-				return;
-			} else {//got what we expected.
-				internal.triggerEvent(options.container,'success', options);
-			}
-
+			internal.triggerEvent(options.container,'success', options);
+			
 			// Don't track if page isn't part of history, or if autoAnalytics is disabled
 			if(options.autoAnalytics && options.history) {
 				// If autoAnalytics is enabled and a Google analytics tracker is detected push 
