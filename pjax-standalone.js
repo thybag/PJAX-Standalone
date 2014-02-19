@@ -4,7 +4,7 @@
  * A standalone implementation of Pushstate AJAX, for non-jQuery web pages.
  * jQuery are recommended to use the original implementation at: http://github.com/defunkt/jquery-pjax
  * 
- * @version 0.6.0
+ * @version 0.6.1
  * @author Carl
  * @source https://github.com/thybag/PJAX-Standalone
  * @license MIT
@@ -231,17 +231,12 @@
 		if(title)
 			document.title = title;
 
-		// Look through all returned divs.
-		var tmpNodes = html.getElementsByTagName('div');
-		for(var i=0;i<tmpNodes.length;i++) {
-			if(tmpNodes[i].id === options.container.id){
-				// If our container div is within the returned HTML, we both know the returned content is
-				// not PJAX ready, but instead likely the full HTML content. in Addition we can also guess that
-				// the content of this node is what we want to update our container with.
-				// Thus use this content as the HTML to append in to our page via PJAX.
-				return tmpNodes[i]; 
-			}
-		}
+		// Going by caniuse all browsers that support the pushstate API also support querySelector's
+		// see: http://caniuse.com/#search=push 
+		// see: http://caniuse.com/#search=querySelector
+		var container = html.querySelector("#" + options.container.id);
+		if(container !== null) return container;
+
 		// If our container was not found, HTML will be returned as is.
 		return html;
 	};
