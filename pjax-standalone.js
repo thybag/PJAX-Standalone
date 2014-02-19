@@ -138,19 +138,29 @@
 
 		// Ignore anchors on the same page
 		if(node.pathname === location.pathname && node.hash.length > 0) {
-			return true;
+			return;
+		}
+
+		// Ignore common non-PJAX loadable media types (pdf/doc/zips & images)
+		// see: https://github.com/thybag/PJAX-Standalone/issues/18
+		var ignored = ['pdf','doc','docx','zip','rar','7z','gif','jpeg','jpg','png'];
+		if(ignored.indexOf( node.pathname.split('.').pop().toLowerCase() ) !== -1){
+			return;
 		}
 
 		// Add link HREF to object
 		options.url = node.href;
+
 		// If PJAX data is specified, use as container
 		if(node.getAttribute('data-pjax')) {
 			options.container = node.getAttribute('data-pjax');
 		}
+
 		// If data-title is specified, use as title.
 		if(node.getAttribute('data-title')) {
 			options.title = node.getAttribute('data-title');
 		}
+
 		// Check options are valid.
 		options = internal.parseOptions(options);
 		if(options === false) return;
