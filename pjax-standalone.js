@@ -142,9 +142,7 @@
 		}
 
 		// Ignore common non-PJAX loadable media types (pdf/doc/zips & images)
-		// see: https://github.com/thybag/PJAX-Standalone/issues/18
-		var ignored = ['pdf','doc','docx','zip','rar','7z','gif','jpeg','jpg','png'];
-		if(ignored.indexOf( node.pathname.split('.').pop().toLowerCase() ) !== -1){
+		if(options.ignoreFileTypes.indexOf( node.pathname.split('.').pop().toLowerCase() ) !== -1){
 			return;
 		}
 
@@ -464,6 +462,10 @@
 
 		// Get container (if its an id, convert it to a DOM node.)
 		options.container = internal.get_container_node(options.container);
+
+		// Ignored file types
+		var ignoreFileTypes = ['pdf','doc','docx','zip','rar','7z','gif','jpeg','jpg','png'];
+		if(typeof options.ignoreFileTypes === 'undefined') options.ignoreFileTypes = ignoreFileTypes;
 
 		// Events
 		var events = ['ready', 'beforeSend', 'complete', 'error', 'success'];
