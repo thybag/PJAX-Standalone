@@ -6,6 +6,8 @@
   "license": "MIT",
   "ignore": [
     "test/",
-    "readme.md"
+    "readme.md",
+    "Gruntfile.js",
+    "package.json"
   ]
 }

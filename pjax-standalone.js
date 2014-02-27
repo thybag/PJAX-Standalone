@@ -1,4 +1,4 @@
-/**
+/**!
  * PJAX- Standalone
  *
  * A standalone implementation of Pushstate AJAX, for non-jQuery web pages.
@@ -9,7 +9,7 @@
  * @source https://github.com/thybag/PJAX-Standalone
  * @license MIT
  */
-(function(){
+(function(){ 
 
 	// Object to store private values/methods.
 	var internal = {
