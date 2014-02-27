@@ -40,9 +40,9 @@
 		</div>
 	 	<ul class="nav navbar-nav" style='margin-left:20px;'>
 			<li><a href='.' data-pjax='content'>Home</a></li>
-			<li><a href='page1.php' data-pjax='content'>demo 1</a></li>
-			<li><a href='page2.php' data-pjax='content'>demo 2</a></li>
-			<li><a href='page3.php?test=test' class='no'>demo 3</a></li>
+			<li><a href='page1.php' data-pjax='content'>Demo 1</a></li>
+			<li><a href='page2.php' data-pjax='content'>Demo 2</a></li>
+			<li><a href='page3.php?test=test' class='no'>Demo 3</a></li>
 		</ul>
 	</div>
 	<div class='container'>

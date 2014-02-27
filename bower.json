@@ -1,11 +1,13 @@
 {
   "name": "thybag/PJAX-Standalone",
-  "version": "0.6.0",
-  "main": "pjax-standalone.js",
+  "version": "0.6.1",
+  "main": "pjax-standalone.min.js",
   "description": "A standalone implementation of Pushstate AJAX, for non-jquery webpages.",
   "license": "MIT",
   "ignore": [
     "test/",
-    "readme.md"
+    "readme.md",
+    "Gruntfile.js",
+    "package.json"
   ]
 }

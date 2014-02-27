@@ -1,15 +1,15 @@
-/**
+/**!
  * PJAX- Standalone
  *
  * A standalone implementation of Pushstate AJAX, for non-jQuery web pages.
  * jQuery are recommended to use the original implementation at: http://github.com/defunkt/jquery-pjax
  * 
- * @version 0.6.0
+ * @version 0.6.1
  * @author Carl
  * @source https://github.com/thybag/PJAX-Standalone
  * @license MIT
  */
-(function(){
+(function(){ 
 
 	// Object to store private values/methods.
 	var internal = {
@@ -17,7 +17,9 @@
 		"firstrun": true,
 		// Borrowed wholesale from https://github.com/defunkt/jquery-pjax
 		// Attempt to check that a device supports pushstate before attempting to use it.
-		"is_supported": window.history && window.history.pushState && window.history.replaceState && !navigator.userAgent.match(/((iPod|iPhone|iPad).+\bOS\s+[1-4]|WebApps\/.+CFNetwork)/)
+		"is_supported": window.history && window.history.pushState && window.history.replaceState && !navigator.userAgent.match(/((iPod|iPhone|iPad).+\bOS\s+[1-4]|WebApps\/.+CFNetwork)/),
+		// Track which scripts have been included in to the page. (used if e)
+		"loaded_scripts": []
 	};
 	
 	// If PJAX isn't supported we can skip setting up the library all together
@@ -64,7 +66,7 @@
 	 * @return obj
 	 */
 	internal.clone = function(obj) {
-		object = {};
+		var object = {};
 		// For every option in object, create it in the duplicate.
 		for (var i in obj) {
 			object[i] = obj[i];
@@ -82,7 +84,7 @@
 	 */
 	internal.triggerEvent = function(node, event_name, data) {
 		// Good browsers
-		evt = document.createEvent("HTMLEvents");
+		var evt = document.createEvent("HTMLEvents");
 		evt.initEvent(event_name, true, true);
 		// If additional data was provided, add it to event
 		if(typeof data !== 'undefined') evt.data = data;
@@ -136,19 +138,30 @@
 
 		// Ignore anchors on the same page
 		if(node.pathname === location.pathname && node.hash.length > 0) {
-			return true;
+			return;
+		}
+
+		// Ignore common non-PJAX loadable media types (pdf/doc/zips & images) unless user provides alternate array
+		var ignoreFileTypes = ['pdf','doc','docx','zip','rar','7z','gif','jpeg','jpg','png'];
+		if(typeof options.ignoreFileTypes === 'undefined') options.ignoreFileTypes = ignoreFileTypes;
+		// Skip link if file type is within ignored types array
+		if(options.ignoreFileTypes.indexOf( node.pathname.split('.').pop().toLowerCase() ) !== -1){
+			return;
 		}
 
 		// Add link HREF to object
 		options.url = node.href;
+
 		// If PJAX data is specified, use as container
 		if(node.getAttribute('data-pjax')) {
 			options.container = node.getAttribute('data-pjax');
 		}
+
 		// If data-title is specified, use as title.
 		if(node.getAttribute('data-title')) {
 			options.title = node.getAttribute('data-title');
 		}
+
 		// Check options are valid.
 		options = internal.parseOptions(options);
 		if(options === false) return;
@@ -175,6 +188,8 @@
 	 */
 	internal.parseLinks = function(dom_obj, options) {
 
+		var nodes;
+
 		if(typeof options.useClass !== 'undefined'){
 			// Get all nodes with the provided class name.
 			nodes = dom_obj.getElementsByClassName(options.useClass);
@@ -185,7 +200,7 @@
 
 		// For all returned nodes
 		for(var i=0,tmp_opt; i < nodes.length; i++) {
-			node = nodes[i];
+			var node = nodes[i];
 			if(typeof options.excludeClass !== 'undefined') {
 				if(node.className.indexOf(options.excludeClass) !== -1) continue;
 			}
@@ -195,9 +210,19 @@
 			internal.attach(node, tmp_opt);
 		}
 
-		// Fire ready event once all links are connected
-		if(internal.firstrun)
+		if(internal.firstrun) {
+			// Store array or all currently included script src's to avoid PJAX accidentally reloading existing libraries
+			var scripts = document.getElementsByTagName('script');
+			for(var c=0; c < scripts.length; c++) {
+				if(scripts[c].src && internal.loaded_scripts.indexOf(scripts[c].src) === -1){
+					internal.loaded_scripts.push(scripts[c].src);
+				}
+			}
+
+			// Fire ready event once all links are connected
 			internal.triggerEvent(internal.get_container_node(options.container), 'ready');
+			
+		}
 	};
 
 	/**
@@ -212,30 +237,86 @@
 	 * @return HTML to append to our page.
 	 */
 	internal.smartLoad = function(html, options) {
-		// Create tmp node (So we can interact with it via the DOM)
-		var tmp = document.createElement('div');
-
-		// Add HTML
-		tmp.innerHTML = html; 
-
 		// Grab the title if there is one
-		var title = tmp.getElementsByTagName('title')[0].innerHTML;
+		var title = html.getElementsByTagName('title')[0].innerHTML;
 		if(title)
 			document.title = title;
 
-		// Look through all returned divs.
-		tmpNodes = tmp.getElementsByTagName('div');
-		for(var i=0;i<tmpNodes.length;i++) {
-			if(tmpNodes[i].id === options.container.id){
-				// If our container div is within the returned HTML, we both know the returned content is
-				// not PJAX ready, but instead likely the full HTML content. in Addition we can also guess that
-				// the content of this node is what we want to update our container with.
-				// Thus use this content as the HTML to append in to our page via PJAX.
-				return tmpNodes[i].innerHTML; 
-			}
-		}
+		// Going by caniuse all browsers that support the pushstate API also support querySelector's
+		// see: http://caniuse.com/#search=push 
+		// see: http://caniuse.com/#search=querySelector
+		var container = html.querySelector("#" + options.container.id);
+		if(container !== null) return container;
+
 		// If our container was not found, HTML will be returned as is.
 		return html;
+	};
+
+	/**
+	 * Update Content
+	 * Updates DOM with content loaded via PJAX
+	 *
+	 * @param html DOM fragment of loaded container
+	 * @param options PJAX configuration options
+	 * return options
+	 */
+	internal.updateContent = function(html, options){
+		// Create in memory DOM node, to make parsing returned data easier
+		var tmp = document.createElement('div');
+		tmp.innerHTML = html; 
+
+		// Ensure we have the correct HTML to apply to our container.
+		if(options.smartLoad) tmp = internal.smartLoad(tmp, options);
+
+		// If no title was provided, extract it
+		if(typeof options.title === 'undefined'){
+			// Use current doc title (this will be updated via smart load if its enabled)
+			options.title = document.title;
+
+			// Attempt to grab title from non-smart loaded page contents 
+			if(!options.smartLoad){
+				var tmpTitle = tmp.getElementsByTagName('title');
+				if(tmpTitle.length !== 0) options.title = tmpTitle[0].innerHTML;
+			}
+		}
+
+		// Update the DOM with the new content
+		options.container.innerHTML = tmp.innerHTML;
+
+		// Run included JS?
+		if(options.parseJS) internal.runScripts(tmp);
+		
+		// Send data back to handle
+		return options;
+	};
+
+	/**
+	 * runScripts
+	 * Execute JavaScript on pages loaded via PJAX
+	 *
+	 * Note: In-line JavaScript is run each time a page is hit, while external JavaScript
+	 *		is only loaded once (Although remains loaded while the user continues browsing)
+	 *
+	 * @param html DOM fragment of loaded container
+	 * return void
+	 */
+	internal.runScripts = function(html){
+		// Extract JavaScript & eval it (if enabled)
+		var scripts = html.getElementsByTagName('script');
+		for(var sc=0; sc < scripts.length;sc++) {
+			// If has an src & src isn't in "loaded_scripts", load the script.
+			if(scripts[sc].src && internal.loaded_scripts.indexOf(scripts[sc].src) === -1){
+				// Append to head to include
+				var s = document.createElement("script"); 
+				s.src = scripts[sc].src;
+				document.head.appendChild(s);
+				// Add to loaded list
+				internal.loaded_scripts.push(scripts[sc].src);
+			}else{
+				// If raw JS, eval it. 
+				eval(scripts[sc].innerHTML);
+			}
+		}
 	};
 
 	/**
@@ -261,23 +342,8 @@
 				return;
 			}
 
-			// Ensure we have the correct HTML to apply to our container.
-			if(options.smartLoad) html = internal.smartLoad(html, options);
-
-			// If no title was provided
-			if(typeof options.title === 'undefined'){
-				// Use current doc title (this will be updated via smart load if its enabled)
-				options.title = document.title;
-
-				// Attempt to grab title from non-smart loaded page contents 
-				if(!options.smartLoad){
-					var tmpTitle = options.container.getElementsByTagName('title');
-					if(tmpTitle.length !== 0) options.title = tmpTitle[0].innerHTML;
-				}
-			}
-
-			// Update the DOM with the new content
-			options.container.innerHTML = html;
+			// Parse page & update DOM
+			options = internal.updateContent(html, options);
 			
 			// Do we need to add this to the history?
 			if(options.history) {
@@ -370,15 +436,17 @@
 		 * - parseLinksOnload: Enabled by default. Process pages loaded via PJAX and setup PJAX on any links found.
 		 * - smartLoad: Tries to ensure the correct HTML is loaded. If you are certain your back end 
 		 *		will only return PJAX ready content this can be disabled for a slight performance boost.
-		 * - autoAnalytics: Automatically attempt to log events to google analytics (if tracker is available)
+		 * - autoAnalytics: Automatically attempt to log events to Google analytics (if tracker is available)
 		 * - returnToTop: Scroll user back to top of page, when new page is opened by PJAX
+		 * - parseJS: Disabled by default, when enabled PJAX will automatically run returned JavaScript
 		 */
 		var defaults = {
 			"history": true,
 			"parseLinksOnload": true,
 			"smartLoad" : true,
 			"autoAnalytics": true,
-			"returnToTop": true
+			"returnToTop": true,
+			"parseJS": false
 		};
 
 		// Ensure a URL and container have been provided.
@@ -496,9 +564,10 @@
 	 * @param options  
 	 */
 	this.invoke = function(/* options */) {
+
+		var options = {};
 		// url, container
 		if(arguments.length === 2){
-			options = {};
 			options.url = arguments[0];
 			options.container = arguments[1];
 		}else{

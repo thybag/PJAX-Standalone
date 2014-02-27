@@ -56,8 +56,10 @@ The PJAX connect method supports the following options:
 * excludeClass - string - If set, PJAX will ignore any link containing the class
 * parseLinksOnload - true|false - Make links in loaded pages use PJAX. Enabled by default.
 * smartLoad - true|false - Ensure returned HTML is correct. Enabled by default.
-* autoAnalytics - true|false - Enabled by default, will attempt to automatically track page views to any detected google analytics trackers.
+* autoAnalytics - true|false - Enabled by default, will attempt to automatically track page views to any detected Google analytics trackers.
 * returnToTop - true|false - Enabled by default, scrolls browser window to top of page, when new content is loaded.
+* parseJS - true|false - Disabled by default, attempt to execute JavaScript found within pages load via PJAX. (plain JS will be run each time the page loads, external files will only be loaded the first time.)
+* ignoreFileTypes - array of file types to be ignored by PJAX. By default this includes PDF, ZIP and a number of other common non-pjax loadable types.
 
 ### Callbacks
 
@@ -85,9 +87,9 @@ The PJAX options at the time of an event being triggered can be accessed via `ev
 
 ### Using PJAX-Standalone programmatically
 
-You can invoke a PJAX page load programmatically by calling the pjax.invoke() method.
-At minimum the PJAX invoke method must be given a URL and container attribute. It can also
-be provided with a title, parseLinksOnload setting and any callbacks you wish to use.
+You can invoke a PJAX page load programmatically by calling the `pjax.invoke()` method.
+At minimum the PJAX invoke method must be given a `URL` and `container` attribute. It can also
+be provided with a `title`, along with any other standard config item or callback you may wish.
 
 	pjax.invoke({url:'page1.php', 'container': 'content'});
 
