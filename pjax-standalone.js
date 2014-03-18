@@ -4,7 +4,7 @@
  * A standalone implementation of Pushstate AJAX, for non-jQuery web pages.
  * jQuery are recommended to use the original implementation at: http://github.com/defunkt/jquery-pjax
  * 
- * @version 0.6.1
+ * @version 0.6.2
  * @author Carl
  * @source https://github.com/thybag/PJAX-Standalone
  * @license MIT
@@ -333,7 +333,10 @@
 		internal.triggerEvent(options.container, 'beforeSend', options);
 
 		// Do the request
-		internal.request(options.url, function(html) {
+		internal.request(options.url, function(html, headers) {
+
+			// Make response headers available in options
+			options.headers = headers;
 
 			// Fail if unable to load HTML via AJAX
 			if(html === false){
@@ -403,11 +406,13 @@
 		// Add state listener.
 		xmlhttp.onreadystatechange = function() {
 			if ((xmlhttp.readyState === 4) && (xmlhttp.status === 200)) {
-				// Success, Return HTML
-				callback(xmlhttp.responseText);
+				// Get headers in useful format
+				var headers = internal.parseResponseHeaders(xmlhttp.getAllResponseHeaders());
+				// Success, Return HTML & headers
+				callback(xmlhttp.responseText, headers);
 			}else if((xmlhttp.readyState === 4) && (xmlhttp.status === 404 || xmlhttp.status === 500)){
 				// error (return false)
-				callback(false);
+				callback(false, {});
 			}
 		};
 		// Secret pjax ?get param so browser doesn't return pjax content from cache when we don't want it to
@@ -418,6 +423,32 @@
 		xmlhttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest');// Standard AJAX header.
 
 		xmlhttp.send(null);
+	};
+
+	/**
+	 * ParseResponseHeaders
+	 * Convert response headers to obj
+	 *
+	 * @scope private
+	 * @param raw headers
+	 * @param object of headers
+	 */
+	internal.parseResponseHeaders = function(raw){
+		// Parsed headers
+		var parsedHeaders = {};
+
+		var headers = raw.split("\r\n");
+		for(var h in headers){
+			var header = headers[h];
+			// Ignore blanks
+			if(header === '') continue;
+			var idx = header.indexOf(":");
+			// before : = name
+			// after ": " (+2) = data
+			parsedHeaders[header.substr(0,idx)] = header.substr(idx+2);
+		}
+
+		return parsedHeaders;
 	};
 
 	/**
