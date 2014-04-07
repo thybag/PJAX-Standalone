@@ -242,7 +242,10 @@
 		if(title)
 			document.title = title.innerHTML;
 
-		var container = document.getElementById(options.container.id);
+		// Going by caniuse all browsers that support the pushstate API also support querySelector's
+		// see: http://caniuse.com/#search=push
+		// see: http://caniuse.com/#search=querySelector
+		var container = html.querySelector("#" + options.container.id);
 		if(container !== null) return container;
 
 		// If our container was not found, HTML will be returned as is.
