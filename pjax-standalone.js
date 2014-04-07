@@ -238,14 +238,11 @@
 	 */
 	internal.smartLoad = function(html, options) {
 		// Grab the title if there is one
-		var title = html.getElementsByTagName('title')[0].innerHTML;
+		var title = html.getElementsByTagName('title')[0];
 		if(title)
-			document.title = title;
+			document.title = title.innerHTML;
 
-		// Going by caniuse all browsers that support the pushstate API also support querySelector's
-		// see: http://caniuse.com/#search=push 
-		// see: http://caniuse.com/#search=querySelector
-		var container = html.querySelector("#" + options.container.id);
+		var container = document.getElementById(options.container.id);
 		if(container !== null) return container;
 
 		// If our container was not found, HTML will be returned as is.
