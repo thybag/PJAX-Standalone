@@ -151,6 +151,9 @@
 
 		// Add link HREF to object
 		options.url = node.href;
+		
+		// Add link reference to object allowing beforeSend access to clicked node
+		options.node = node;
 
 		// If PJAX data is specified, use as container
 		if(node.getAttribute('data-pjax')) {
