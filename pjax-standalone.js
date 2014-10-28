@@ -238,12 +238,13 @@
 	 */
 	internal.smartLoad = function(html, options) {
 		// Grab the title if there is one
-		var title = html.getElementsByTagName('title')[0].innerHTML;
+		var title = html.getElementsByTagName('title')[0];
 		if(title)
-			document.title = title;
+        //ensure this title is not overwritten in the caller function
+		options.title=document.title = title.innerHTML;
 
 		// Going by caniuse all browsers that support the pushstate API also support querySelector's
-		// see: http://caniuse.com/#search=push 
+		// see: http://caniuse.com/#search=push
 		// see: http://caniuse.com/#search=querySelector
 		var container = html.querySelector("#" + options.container.id);
 		if(container !== null) return container;
@@ -264,7 +265,8 @@
 		// Create in memory DOM node, to make parsing returned data easier
 		var tmp = document.createElement('div');
 		tmp.innerHTML = html; 
-
+		//to ensure parseJS will take all of the scripts 
+        var full=tmp;
 		// Ensure we have the correct HTML to apply to our container.
 		if(options.smartLoad) tmp = internal.smartLoad(tmp, options);
 
@@ -275,7 +277,7 @@
 
 			// Attempt to grab title from non-smart loaded page contents 
 			if(!options.smartLoad){
-				var tmpTitle = tmp.getElementsByTagName('title');
+				var tmpTitle = full.getElementsByTagName('title');
 				if(tmpTitle.length !== 0) options.title = tmpTitle[0].innerHTML;
 			}
 		}
@@ -284,7 +286,7 @@
 		options.container.innerHTML = tmp.innerHTML;
 
 		// Run included JS?
-		if(options.parseJS) internal.runScripts(tmp);
+		if(options.parseJS) internal.runScripts(full);
 		
 		// Send data back to handle
 		return options;
@@ -305,6 +307,8 @@
 		var scripts = html.getElementsByTagName('script');
 		for(var sc=0; sc < scripts.length;sc++) {
 			// If has an src & src isn't in "loaded_scripts", load the script.
+            if(scripts[sc].src)
+            {
 			if(scripts[sc].src && internal.loaded_scripts.indexOf(scripts[sc].src) === -1){
 				// Append to head to include
 				var s = document.createElement("script"); 
@@ -312,9 +316,13 @@
 				document.head.appendChild(s);
 				// Add to loaded list
 				internal.loaded_scripts.push(scripts[sc].src);
+                }
 			}else{
+		//avoid non JS ie type="x-tmpl-mustache"
+                if(scripts[sc].type=="" || scripts[sc].type=="text/javascript")
 				// If raw JS, eval it. 
-				eval(scripts[sc].innerHTML);
+				try { eval(scripts[sc].innerHTML); } catch(e){
+                  console.log(e);}
 			}
 		}
 	};
