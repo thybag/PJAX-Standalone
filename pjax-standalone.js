@@ -152,9 +152,6 @@
 		// Add link HREF to object
 		options.url = node.href;
 		
-		// Add link reference to object allowing beforeSend access to clicked node
-		options.node = node;
-
 		// If PJAX data is specified, use as container
 		if(node.getAttribute('data-pjax')) {
 			options.container = node.getAttribute('data-pjax');
@@ -177,6 +174,10 @@
 			if(event.preventDefault){ event.preventDefault(); }else{ event.returnValue = false; }
 			// Take no action if we are already on said page?
 			if(document.location.href === options.url) return false;
+			// Store the source click event
+			options.srcEvent = event;
+			// A shortcut to the clicked node
+			options.srcNode = event.target;
 			// handle the load.
 			internal.handle(options);
 		});
@@ -340,8 +341,12 @@
 	 */
 	internal.handle = function(options) {
 		
-		// Fire beforeSend Event.
-		internal.triggerEvent(options.container, 'beforeSend', options);
+		// Allow early abort in the beforeSend function.
+		if (options.beforeSend){
+			if(options.beforeSend(options) === false) {
+				return;
+			}
+		}
 
 		// Do the request
 		internal.request(options.url, function(html, headers) {
