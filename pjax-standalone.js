@@ -4,12 +4,12 @@
  * A standalone implementation of Pushstate AJAX, for non-jQuery web pages.
  * jQuery are recommended to use the original implementation at: http://github.com/defunkt/jquery-pjax
  * 
- * @version 0.6.1
+ * @version 0.6.3
  * @author Carl
  * @source https://github.com/thybag/PJAX-Standalone
  * @license MIT
  */
-(function(){ 
+(function(){
 
 	// Object to store private values/methods.
 	var internal = {
@@ -21,7 +21,7 @@
 		// Track which scripts have been included in to the page. (used if e)
 		"loaded_scripts": []
 	};
-	
+
 	// If PJAX isn't supported we can skip setting up the library all together
 	// So as not to break any code expecting PJAX to be there, return a shell object containing
 	// IE7 + compatible versions of connect (which needs to do nothing) and invoke ( which just changes the page)
@@ -32,14 +32,14 @@
 			"invoke": function() {
 				var url = (arguments.length === 2) ? arguments[0] : arguments.url;
 				document.location = url;
-				return;	
-			} 
+				return;
+			}
 		};
 		// AMD support
-		if (typeof define === 'function' && define.amd) { 
-			define( function() { return pjax_shell; }); 
-		} else { 
-			window.pjax = pjax_shell; 
+		if (typeof define === 'function' && define.amd) {
+			define( function() { return pjax_shell; });
+		} else {
+			window.pjax = pjax_shell;
 		}
 		return;
 	}
@@ -98,16 +98,16 @@
 	internal.addEvent(window, 'popstate', function(st) {
 		if(st.state !== null) {
 
-			var opt = {	
-				'url': st.state.url, 
-				'container': st.state.container, 
+			var opt = {
+				'url': st.state.url,
+				'container': st.state.container,
 				'title' : st.state.title,
 				'history': false
 			};
 
 			// Merge original in original connect options
 			if(typeof internal.options !== 'undefined'){
-				for(var a in internal.options){ 
+				for(var a in internal.options){
 					if(typeof opt[a] === 'undefined') opt[a] = internal.options[a];
 				}
 			}
@@ -126,7 +126,7 @@
 	 * Attach PJAX listeners to a link.
 	 * @scope private
 	 * @param link_node. link that will be clicked.
-	 * @param content_node. 
+	 * @param content_node.
 	 */
 	internal.attach = function(node, options) {
 
@@ -151,6 +151,9 @@
 
 		// Add link HREF to object
 		options.url = node.href;
+		
+		// Add link reference to object allowing beforeSend access to clicked node
+		options.node = node;
 
 		// If PJAX data is specified, use as container
 		if(node.getAttribute('data-pjax')) {
@@ -221,7 +224,7 @@
 
 			// Fire ready event once all links are connected
 			internal.triggerEvent(internal.get_container_node(options.container), 'ready');
-			
+
 		}
 	};
 
@@ -240,7 +243,8 @@
 		// Grab the title if there is one
 		var title = html.getElementsByTagName('title')[0];
 		if(title)
-			document.title = title.innerHTML;
+        //ensure this title is not overwritten in the caller function
+		options.title=document.title = title.innerHTML;
 
 		// Going by caniuse all browsers that support the pushstate API also support querySelector's
 		// see: http://caniuse.com/#search=push
@@ -263,7 +267,10 @@
 	internal.updateContent = function(html, options){
 		// Create in memory DOM node, to make parsing returned data easier
 		var tmp = document.createElement('div');
-		tmp.innerHTML = html; 
+
+		tmp.innerHTML = html;
+		// to ensure parseJS will take all of the scripts 
+		var full = tmp;
 
 		// Ensure we have the correct HTML to apply to our container.
 		if(options.smartLoad) tmp = internal.smartLoad(tmp, options);
@@ -273,9 +280,9 @@
 			// Use current doc title (this will be updated via smart load if its enabled)
 			options.title = document.title;
 
-			// Attempt to grab title from non-smart loaded page contents 
+			// Attempt to grab title from non-smart loaded page contents
 			if(!options.smartLoad){
-				var tmpTitle = tmp.getElementsByTagName('title');
+				var tmpTitle = full.getElementsByTagName('title');
 				if(tmpTitle.length !== 0) options.title = tmpTitle[0].innerHTML;
 			}
 		}
@@ -284,8 +291,8 @@
 		options.container.innerHTML = tmp.innerHTML;
 
 		// Run included JS?
-		if(options.parseJS) internal.runScripts(tmp);
-		
+		if(options.parseJS) internal.runScripts(full);
+
 		// Send data back to handle
 		return options;
 	};
@@ -305,16 +312,25 @@
 		var scripts = html.getElementsByTagName('script');
 		for(var sc=0; sc < scripts.length;sc++) {
 			// If has an src & src isn't in "loaded_scripts", load the script.
-			if(scripts[sc].src && internal.loaded_scripts.indexOf(scripts[sc].src) === -1){
-				// Append to head to include
-				var s = document.createElement("script"); 
-				s.src = scripts[sc].src;
-				document.head.appendChild(s);
-				// Add to loaded list
-				internal.loaded_scripts.push(scripts[sc].src);
-			}else{
-				// If raw JS, eval it. 
-				eval(scripts[sc].innerHTML);
+			if(scripts[sc].src)
+			{
+				if(scripts[sc].src && internal.loaded_scripts.indexOf(scripts[sc].src) === -1){
+					// Append to head to include
+					var s = document.createElement("script");
+					s.src = scripts[sc].src;
+					document.head.appendChild(s);
+					// Add to loaded list
+					internal.loaded_scripts.push(scripts[sc].src);
+				}
+			}
+			else
+			{
+				// Avoid non JS ie type="x-tmpl-mustache"
+				if(scripts[sc].type === "" || scripts[sc].type === "text/javascript"){
+					// If raw JS, eval it. 
+					try { eval(scripts[sc].innerHTML); } 
+					catch(e){ console.log(e); }
+				}
 			}
 		}
 	};
@@ -328,12 +344,15 @@
 	 * @param addtohistory. Does this load require a history event.
 	 */
 	internal.handle = function(options) {
-		
+
 		// Fire beforeSend Event.
 		internal.triggerEvent(options.container, 'beforeSend', options);
 
 		// Do the request
-		internal.request(options.url, function(html) {
+		internal.request(options.url, function(html, headers) {
+
+			// Make response headers available in options
+			options.headers = headers;
 
 			// Fail if unable to load HTML via AJAX
 			if(html === false){
@@ -344,7 +363,7 @@
 
 			// Parse page & update DOM
 			options = internal.updateContent(html, options);
-			
+
 			// Do we need to add this to the history?
 			if(options.history) {
 				// If this is the first time pjax has run, create a state object for the current page.
@@ -364,10 +383,10 @@
 			// Fire Events
 			internal.triggerEvent(options.container,'complete', options);
 			internal.triggerEvent(options.container,'success', options);
-			
+
 			// Don't track if page isn't part of history, or if autoAnalytics is disabled
 			if(options.autoAnalytics && options.history) {
-				// If autoAnalytics is enabled and a Google analytics tracker is detected push 
+				// If autoAnalytics is enabled and a Google analytics tracker is detected push
 				// a trackPageView, so PJAX loaded pages can be tracked successfully.
 				if(window._gaq) _gaq.push(['_trackPageview']);
 				if(window.ga) ga('send', 'pageview', {'page': options.url, 'title': options.title});
@@ -379,7 +398,7 @@
 			// Scroll page to top on new page load
 			if(options.returnToTop) {
 				window.scrollTo(0, 0);
-			} 
+			}
 		});
 	};
 
@@ -394,20 +413,22 @@
 	internal.request = function(location, callback) {
 		// Create xmlHttpRequest object.
 		var xmlhttp;
-		try { 
-			xmlhttp = window.XMLHttpRequest? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP"); 
-		}  catch (e) { 
+		try {
+			xmlhttp = window.XMLHttpRequest? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+		}  catch (e) {
 			console.log("Unable to create XMLHTTP Request");
-			return; 
+			return;
 		}
 		// Add state listener.
 		xmlhttp.onreadystatechange = function() {
 			if ((xmlhttp.readyState === 4) && (xmlhttp.status === 200)) {
-				// Success, Return HTML
-				callback(xmlhttp.responseText);
+				// Get headers in useful format
+				var headers = internal.parseResponseHeaders(xmlhttp.getAllResponseHeaders());
+				// Success, Return HTML & headers
+				callback(xmlhttp.responseText, headers);
 			}else if((xmlhttp.readyState === 4) && (xmlhttp.status === 404 || xmlhttp.status === 500)){
 				// error (return false)
-				callback(false);
+				callback(false, {});
 			}
 		};
 		// Secret pjax ?get param so browser doesn't return pjax content from cache when we don't want it to
@@ -418,6 +439,32 @@
 		xmlhttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest');// Standard AJAX header.
 
 		xmlhttp.send(null);
+	};
+
+	/**
+	 * ParseResponseHeaders
+	 * Convert response headers to obj
+	 *
+	 * @scope private
+	 * @param raw headers
+	 * @param object of headers
+	 */
+	internal.parseResponseHeaders = function(raw){
+		// Parsed headers
+		var parsedHeaders = {};
+
+		var headers = raw.split("\r\n");
+		for(var h in headers){
+			var header = headers[h];
+			// Ignore blanks
+			if(header === '') continue;
+			var idx = header.indexOf(":");
+			// before : = name
+			// after ": " (+2) = data
+			parsedHeaders[header.substr(0,idx)] = header.substr(idx+2);
+		}
+
+		return parsedHeaders;
 	};
 
 	/**
@@ -434,7 +481,7 @@
 		 *
 		 * - history: track event to history (on by default, set to off when performing back operation)
 		 * - parseLinksOnload: Enabled by default. Process pages loaded via PJAX and setup PJAX on any links found.
-		 * - smartLoad: Tries to ensure the correct HTML is loaded. If you are certain your back end 
+		 * - smartLoad: Tries to ensure the correct HTML is loaded. If you are certain your back end
 		 *		will only return PJAX ready content this can be disabled for a slight performance boost.
 		 * - autoAnalytics: Automatically attempt to log events to Google analytics (if tracker is available)
 		 * - returnToTop: Scroll user back to top of page, when new page is opened by PJAX
@@ -505,7 +552,7 @@
 	 * @scope public
 	 *
 	 * Can be called in 3 ways.
-	 * Calling as connect(); 
+	 * Calling as connect();
 	 *		Will look for links with the data-pjax attribute.
 	 *
 	 * Calling as connect(container_id)
@@ -514,7 +561,7 @@
 	 * Calling as connect(container_id, class_name)
 	 *		Will try to attach any links with the given class name, using container_id as the target.
 	 *
-	 * Calling as connect({	
+	 * Calling as connect({
 	 *						'url':'somepage.php',
 	 *						'container':'somecontainer',
 	 *						'beforeSend': function(){console.log("sending");}
@@ -542,35 +589,35 @@
 		// Delete history and title if provided. These options should only be provided via invoke();
 		delete options.title;
 		delete options.history;
-		
+
 		internal.options = options;
 		if(document.readyState === 'complete') {
 			internal.parseLinks(document, options);
 		} else {
 			//Don't run until the window is ready.
-			internal.addEvent(window, 'load', function(){	
+			internal.addEvent(window, 'load', function(){
 				//Parse links using specified options
 				internal.parseLinks(document, options);
 			});
 		}
 	};
-	
+
 	/**
 	 * invoke
 	 * Directly invoke a pjax page load.
 	 * invoke({url: 'file.php', 'container':'content'});
 	 *
 	 * @scope public
-	 * @param options  
+	 * @param options
 	 */
 	this.invoke = function(/* options */) {
 
 		var options = {};
 		// url, container
-		if(arguments.length === 2){
+		if(arguments.length === 2) {
 			options.url = arguments[0];
 			options.container = arguments[1];
-		}else{
+		} else {
 			options = arguments[0];
 		}
 
@@ -587,10 +634,11 @@
 		define( function() {
 			return pjax_obj;
 		});
-	}else{
+	} else if(typeof module === "object" && module.exports) {
+			module.exports = pjax_obj;
+	} else {
 		// Make PJAX object accessible in global name space
 		window.pjax = pjax_obj;
 	}
-
 
 }).call({});

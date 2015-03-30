@@ -1,7 +1,7 @@
 {
   "name": "Pjax-Standalone",
   "description": "A standalone implementation of Pushstate AJAX, for non-jquery webpages",
-  "version": "0.6.1",
+  "version": "0.6.3",
   "devDependencies": {
     "grunt-cli": "~0.1.13",
     "grunt-contrib-jshint": "~0.8.0",

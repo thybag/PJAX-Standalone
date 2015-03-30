@@ -1,6 +1,6 @@
 {
   "name": "thybag/PJAX-Standalone",
-  "version": "0.6.1",
+  "version": "0.6.3",
   "main": "pjax-standalone.min.js",
   "description": "A standalone implementation of Pushstate AJAX, for non-jquery webpages.",
   "license": "MIT",
