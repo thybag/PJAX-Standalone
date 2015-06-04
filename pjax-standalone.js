@@ -402,7 +402,7 @@
 		}
 		// Add state listener.
 		xmlhttp.onreadystatechange = function() {
-			if ((xmlhttp.readyState === 4) && (xmlhttp.status === 200)) {
+			if ((xmlhttp.readyState === 4) && (xmlhttp.status === 200 || (internal.options.allow404Responses === true && xmlhttp.status === 404))) {
 				// Success, Return HTML
 				callback(xmlhttp.responseText);
 			}else if((xmlhttp.readyState === 4) && (xmlhttp.status === 404 || xmlhttp.status === 500)){
